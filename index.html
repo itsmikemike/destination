@@ -940,8 +940,54 @@
     ["#1B1F3B", "#FF9F1C", "#FFD23F", "#2EC4B6"]
   ];
 
-  const colors = PALETTES[Math.floor(Math.random() * PALETTES.length)].map(hexToRgb);
+  const chosenPalette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+  const colors = chosenPalette.map(hexToRgb);
   const bands = [0.42, 0.68, 0.87, 1.01];
+
+  // Make the page's accent color echo whichever hero palette was just
+  // picked, instead of staying a fixed amber regardless of the animation.
+  // Not every palette color makes a good UI accent (some are pale creams
+  // or near-black tones meant for fills, not buttons/underlines), so pick
+  // whichever of the 4 has lightness closest to a legible mid-range value,
+  // then compute its own readable text color via real luminance rather
+  // than guessing.
+  (() => {
+    const rgbToHsl = ([r, g, b]) => {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h = 0, s = 0; const l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+        else if (max === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+      }
+      return l;
+    };
+    const relLuminance = ([r, g, b]) => {
+      const f = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+      return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+    };
+    const darken = (rgb, amt) => rgb.map(c => Math.max(0, Math.round(c * (1 - amt))));
+    const toHex = rgb => "#" + rgb.map(c => c.toString(16).padStart(2, "0")).join("");
+
+    let best = colors[0], bestScore = Infinity;
+    for (const c of colors) {
+      const score = Math.abs(rgbToHsl(c) - 0.5);
+      if (score < bestScore) { bestScore = score; best = c; }
+    }
+
+    const accent = toHex(best);
+    const accentDark = toHex(darken(best, 0.22));
+    const accentInk = relLuminance(best) > 0.4 ? "#16181C" : "#FFFFFF";
+
+    const root = document.documentElement.style;
+    root.setProperty("--accent", accent);
+    root.setProperty("--accent-dark", accentDark);
+    root.setProperty("--accent-ink", accentInk);
+    root.setProperty("--accent-soft", `${accent}24`);
+  })();
 
   const rand = (min, max) => Math.random() * (max - min) + min;
   const offX = rand(0, 100);
