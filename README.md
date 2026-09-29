@@ -1,71 +1,83 @@
-One humble file of
-markup holds it all, no build
-to run, no install.
+# Destination
 
-Just open it in
-any browser's frame, or let
-it live where pages claim.
+*A personal start page, documented in haiku.*
 
-A little plot at
-anthorian's door, search boxes
-wait in rows of four.
+## What it is
 
-For Google, Maps, and
-Amazon stand by, for eBay,
-YouTube, Craigslist — try.
+A start page for me  
+Links I visit most each day  
+one tab, then I'm off
 
-They send you off in
-the selfsame tab, no window
-spawned, no second grab.
+## The hero
 
-A hero glows in
-colors drifting slow, each visit
-brings a gradient's flow.
+Camo in the sky  
+twenty palettes drift and shift  
+new on each reload
 
-A quiet drift of
-particles that stray and never
-trace the path they'd stray.
+## Accent color
 
-Then Intel speaks of
-nations near and far, Industry
-keeps watch on the star.
+The buttons borrow  
+a color from the pattern  
+so the page agrees
 
-The Humans corner
-minds the mail and chat, and
-Tooling follows that.
+## Search
 
-Then Electrotainment
-rings its gaming bell, Music
-plays a verse so well.
+Amazon, YouTube  
+eBay, Marketplace, and Maps  
+type, press Go, then leave
 
-Then Local keeps its
-eye on Reston's ground, Hardware
-splits, neatly bound.
+## Theme
 
-Then Guitars strum their
-tabs and gear anew, some hundred
-sixty links are true.
+System, light, or dark  
+one button turns through all three  
+it remembers you
 
-And scattered through, a
-small recycled sign, points out
-the suggested line.
+## Clock
 
-Twelve choices resting
-in a waiting pool, fresh each
-time you load the tool.
+Military time  
+four digits, no colon, crisp  
+now: oh nine thirty
 
-No framework here, no
-build step to be found, just
-native code unbound.
+## Suggested links
 
-The columns lock in
-step through subgrid's art, so
-rows won't fall apart.
+Gray links, recycled  
+three fresh picks in each column  
+tap to shuffle more
 
-And should you wish to
-change a word or link, then
-open, stop to think,
+## Favicon
 
-Commit the change to
-main, and wait a spell, the
-Pages build shall swell.
+A tiny circle  
+yellow, orange, and red steps  
+sits up in the tab
+
+## `index.html`
+
+The default homepage  
+the links, the hero, the clock  
+no news to wait on
+
+## `index-news.html`
+
+Twenty feeds, random  
+picked from eighty-five sources  
+four layouts rotate
+
+## A note on previews
+
+Preview windows block  
+the feeds from reaching the page  
+open it for real
+
+## Hosting
+
+Hosted for free on  
+GitHub Pages: drag, drop, done  
+one file, nothing else
+
+https://itsmikemike.github.io/destination/
+
+## Credits
+
+Built with Claude and me  
+one small tweak, then another  
+home, the web begins
