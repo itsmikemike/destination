@@ -330,16 +330,12 @@
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
-  /* Default assumes dark (matching the site's overall convention), so
-     only the light-mode cases need an explicit override. */
-  .util-btn .moon { display: none; }
-  .util-btn .sun { display: block; }
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme]) .util-btn .sun { display: none; }
-    :root:not([data-theme]) .util-btn .moon { display: block; }
-  }
-  :root[data-theme="light"] .util-btn .sun { display: none; }
-  :root[data-theme="light"] .util-btn .moon { display: block; }
+  /* The theme button shows the icon for whichever mode is active:
+     half-circle = following the system, sun = light, moon = dark. */
+  #theme-toggle svg { display: none; }
+  :root:not([data-theme]) #theme-toggle .auto,
+  :root[data-theme="light"] #theme-toggle .sun,
+  :root[data-theme="dark"] #theme-toggle .moon { display: block; }
 
 
 
@@ -425,7 +421,11 @@
 
     <aside class="utility" aria-label="Utilities">
       <span class="clock" id="clock" aria-hidden="true"></span>
-      <button type="button" id="theme-toggle" class="util-btn" aria-label="Toggle light and dark mode">
+      <button type="button" id="theme-toggle" class="util-btn" aria-label="Theme: System (click for Light)" title="Theme: System">
+        <svg class="auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/>
+        </svg>
         <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="4"/>
           <path d="M12 3v1M12 20v1M4.2 4.2l.7.7M19.1 19.1l.7.7M3 12h1M20 12h1M4.2 19.8l.7-.7M19.1 4.9l.7-.7"/>
@@ -491,7 +491,7 @@
       <div class="col">
         <ul class="links" data-suggest="industry-1">
           <li><a href="https://reallygoodemails.com/"><strong>Really Good Emails</strong></a></li>
-          <li><a href="https://www.behance.net/">behance</a></li>
+          <li><a href="https://www.behance.net/galleries/graphic-design">behance</a></li>
           <li><a href="https://www.adage.com/">Ad Age</a></li>
           <li><a href="https://user-interface.alltop.com/"><strong>AllTop (UI)</strong></a></li>
           <li><a href="https://webfieldmanual.com/"><strong>Web Field Manual</strong></a></li>
@@ -685,16 +685,17 @@
           <li class="captitle">News</li>
           <li><a href="https://www.premierguitar.com/"><strong>Premier Guitar</strong></a></li>
           <li><a href="https://www.guitarworld.com/"><strong>Guitar World</strong></a></li>
-          <li><a href="https://www.sweetwater.com/"><strong>Sweetwater</strong></a></li>
-          <li><a href="https://reverb.com/"><strong>Reverb</strong></a></li>
-          <li><a href="https://www.andertons.co.uk/">Andertons</a></li>
-          <li><a href="https://www.thomann.de/">Thomann</a></li>
+          <li><a href="https://www.guitarplayer.com/">Guitar Player</a></li>
+          <li><a href="https://guitar.com/">Guitar.com</a></li>
+          <li><a href="https://www.musicradar.com/guitars">MusicRadar</a></li>
+          <li><a href="https://www.vintageguitar.com/">Vintage Guitar</a></li>
           <li><a href="https://www.thegearpage.net/">The Gear Page</a></li>
-          <li class="captitle">Tabulature</li>
+          <li class="captitle">Tabs &amp; Lessons</li>
           <li><a href="https://www.ultimate-guitar.com/"><strong>Ultimate Guitar</strong></a></li>
           <li><a href="https://www.songsterr.com/"><strong>Songsterr</strong></a></li>
           <li><a href="https://911tabs.com/">911Tabs</a></li>
           <li><a href="https://chordify.net/">Chordify</a></li>
+          <li><a href="https://www.justinguitar.com/">JustinGuitar</a></li>
         </ul>
       </div>
     </section>
@@ -705,22 +706,44 @@
 <script>
 "use strict";
 
-/* ---------- Theme toggle: OS by default, explicit choice overrides ---------- */
+/* ---------- Theme toggle: three states, cycling System -> Light -> Dark.
+   "System" means no saved choice and no data-theme attribute, so the CSS
+   falls back to following the OS's light/dark setting. ---------- */
 (() => {
   const root = document.documentElement;
   const btn = document.getElementById("theme-toggle");
   if (!btn) return;
 
-  const systemPrefersLight = matchMedia("(prefers-color-scheme: light)");
+  const ORDER = ["system", "light", "dark"];
+  const LABEL = { system: "System", light: "Light", dark: "Dark" };
 
-  const effectiveTheme = () =>
-    root.getAttribute("data-theme") || (systemPrefersLight.matches ? "light" : "dark");
+  const current = () => root.getAttribute("data-theme") || "system";
+
+  const label = () => {
+    const now = current();
+    const next = ORDER[(ORDER.indexOf(now) + 1) % ORDER.length];
+    btn.title = `Theme: ${LABEL[now]}`;
+    btn.setAttribute("aria-label", `Theme: ${LABEL[now]} (click for ${LABEL[next]})`);
+  };
 
   btn.addEventListener("click", () => {
-    const next = effectiveTheme() === "dark" ? "light" : "dark";
-    root.setAttribute("data-theme", next);
-    try { localStorage.setItem("theme", next); } catch (e) {}
+    const next = ORDER[(ORDER.indexOf(current()) + 1) % ORDER.length];
+    try {
+      if (next === "system") {
+        root.removeAttribute("data-theme");
+        localStorage.removeItem("theme");
+      } else {
+        root.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+      }
+    } catch (e) {
+      if (next === "system") root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", next);
+    }
+    label();
   });
+
+  label();
 })();
 
 /* ---------- Clock ---------- */
@@ -1037,7 +1060,6 @@
       ["TechRadar", "https://www.techradar.com/"],
       ["Laptop Mag", "https://www.laptopmag.com/"],
       ["GSMArena", "https://www.gsmarena.com/"],
-      ["iMore", "https://www.imore.com/"],
       ["9to5Toys", "https://9to5toys.com/"]
     ],
     "hw-photography": [
@@ -1083,17 +1105,14 @@
       ["Popular Mechanics", "https://www.popularmechanics.com/"]
     ],
     "guitars": [
-      ["TalkBass", "https://www.talkbass.com/"],
-      ["Chase Bliss Audio", "https://www.chasebliss.com/"],
-      ["JHS Pedals", "https://jhspedals.info/"],
-      ["Fender", "https://www.fender.com/"],
-      ["Gibson", "https://www.gibson.com/"],
-      ["Guitar.com", "https://guitar.com/"],
+      ["Acoustic Guitar", "https://acousticguitar.com/"],
+      ["Fretboard Journal", "https://www.fretboardjournal.com/"],
+      ["Gearnews", "https://www.gearnews.com/"],
+      ["Effects Database", "https://www.effectsdatabase.com/"],
+      ["Guitar Pedal X", "https://www.guitarpedalx.com/"],
+      ["Bass Player", "https://www.bassplayer.com/"],
       ["No Treble", "https://www.notreble.com/"],
-      ["D'Addario", "https://www.daddario.com/"],
-      ["Seymour Duncan", "https://www.seymourduncan.com/"],
-      ["Guitar Center", "https://www.guitarcenter.com/"],
-      ["Musician's Friend", "https://www.musiciansfriend.com/"],
+      ["TalkBass", "https://www.talkbass.com/"],
       ["Sound On Sound", "https://www.soundonsound.com/"]
     ]
   };
