@@ -273,6 +273,9 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-3);
   }
+  /* With an odd number of fields, stretch the last one across the row
+     instead of leaving it stranded at half width. */
+  .search form:last-child:nth-child(odd) { grid-column: 1 / -1; }
 
   .search form { display: grid; gap: var(--space-2); }
   .search input {
@@ -429,6 +432,10 @@
       </form>
       <form action="https://www.ebay.com/sch/i.html" method="get" role="search">
         <input type="search" name="_nkw" placeholder="eBay" aria-label="Search eBay" autocomplete="off">
+        <button type="submit">Go</button>
+      </form>
+      <form action="https://www.facebook.com/marketplace/search/" method="get" role="search">
+        <input type="search" name="query" placeholder="Marketplace" aria-label="Search Facebook Marketplace" autocomplete="off">
         <button type="submit">Go</button>
       </form>
       <form action="https://www.google.com/maps/search/" method="get" role="search">
@@ -738,12 +745,15 @@
   label();
 })();
 
-/* ---------- Clock ---------- */
+/* ---------- Clock: 24-hour military time (e.g. 0930, 1745) ---------- */
 (() => {
   const el = document.getElementById("clock");
   if (!el) return;
-  const fmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
-  const tick = () => { el.textContent = fmt.format(new Date()); };
+  const pad = n => String(n).padStart(2, "0");
+  const tick = () => {
+    const d = new Date();
+    el.textContent = pad(d.getHours()) + pad(d.getMinutes());
+  };
   tick();
   setInterval(tick, 15000);
 })();
