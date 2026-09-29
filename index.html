@@ -270,7 +270,7 @@
   }
   .search {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-3);
   }
 
@@ -306,8 +306,8 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--border);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border);
   }
   .util-btn {
     display: grid;
@@ -391,34 +391,6 @@
 
   <main class="layout">
     <div class="rail">
-    <aside class="search" aria-label="Search">
-      <form action="https://www.google.com/search" method="get" role="search">
-        <input type="search" name="q" placeholder="Google" aria-label="Search Google" autocomplete="off">
-        <button type="submit">Go</button>
-      </form>
-      <form action="https://www.google.com/maps/search/" method="get" role="search">
-        <input type="hidden" name="api" value="1">
-        <input type="search" name="query" placeholder="Maps" aria-label="Search Google Maps" autocomplete="off">
-        <button type="submit">Go</button>
-      </form>
-      <form action="https://www.ebay.com/sch/i.html" method="get" role="search">
-        <input type="search" name="_nkw" placeholder="eBay" aria-label="Search eBay" autocomplete="off">
-        <button type="submit">Go</button>
-      </form>
-      <form action="https://www.amazon.com/s" method="get" role="search">
-        <input type="search" name="k" placeholder="Amazon" aria-label="Search Amazon" autocomplete="off">
-        <button type="submit">Go</button>
-      </form>
-      <form action="https://www.youtube.com/results" method="get" role="search">
-        <input type="search" name="search_query" placeholder="YouTube" aria-label="Search YouTube" autocomplete="off">
-        <button type="submit">Go</button>
-      </form>
-      <form action="https://washingtondc.craigslist.org/search/sss" method="get" role="search">
-        <input type="search" name="query" placeholder="Craigslist" aria-label="Search Craigslist" autocomplete="off">
-        <button type="submit">Go</button>
-      </form>
-    </aside>
-
     <aside class="utility" aria-label="Utilities">
       <span class="clock" id="clock" aria-hidden="true"></span>
       <button type="button" id="theme-toggle" class="util-btn" aria-label="Theme: System (click for Light)" title="Theme: System">
@@ -444,6 +416,26 @@
           <path d="M18.196 11.732l-4.5 -7.794a2 2 0 0 0 -3.256 -.14l-.591 .976" />
         </svg>
       </button>
+    </aside>
+
+    <aside class="search" aria-label="Search">
+      <form action="https://www.amazon.com/s" method="get" role="search">
+        <input type="search" name="k" placeholder="Amazon" aria-label="Search Amazon" autocomplete="off">
+        <button type="submit">Go</button>
+      </form>
+      <form action="https://www.youtube.com/results" method="get" role="search">
+        <input type="search" name="search_query" placeholder="YouTube" aria-label="Search YouTube" autocomplete="off">
+        <button type="submit">Go</button>
+      </form>
+      <form action="https://www.ebay.com/sch/i.html" method="get" role="search">
+        <input type="search" name="_nkw" placeholder="eBay" aria-label="Search eBay" autocomplete="off">
+        <button type="submit">Go</button>
+      </form>
+      <form action="https://www.google.com/maps/search/" method="get" role="search">
+        <input type="hidden" name="api" value="1">
+        <input type="search" name="query" placeholder="Maps" aria-label="Search Google Maps" autocomplete="off">
+        <button type="submit">Go</button>
+      </form>
     </aside>
     </div>
 
