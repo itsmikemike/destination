@@ -328,6 +328,36 @@
   .util-btn:hover,
   .util-btn:focus-visible { color: var(--text); border-color: var(--muted); }
   .util-btn svg { width: 16px; height: 16px; }
+
+  /* Utility buttons: a ring that fills clockwise around the border, like a
+     gauge, then fades. The sweep angle is a registered custom property so
+     the browser can animate it smoothly. */
+  @property --fill {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+  }
+  .util-btn { position: relative; }
+  .util-btn::after {
+    content: "";
+    position: absolute;
+    inset: -1px;                     /* sit exactly on top of the 1px border */
+    border-radius: 50%;
+    background: conic-gradient(var(--accent) var(--fill), transparent 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+            mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+    opacity: 0;
+    pointer-events: none;
+  }
+  .util-btn.filling::after { animation: meter-fill .7s ease-out forwards; }
+  @keyframes meter-fill {
+    0%   { --fill: 0deg;   opacity: 1; }
+    65%  { --fill: 360deg; opacity: 1; }
+    100% { --fill: 360deg; opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .util-btn.filling::after { animation: none; }
+  }
   .clock {
     font: 12px var(--font-body);
     color: var(--muted);
@@ -419,6 +449,15 @@
           <path d="M18.196 11.732l-4.5 -7.794a2 2 0 0 0 -3.256 -.14l-.591 .976" />
         </svg>
       </button>
+      <button type="button" id="shuffle-colors" class="util-btn" aria-label="Shuffle colors" title="Shuffle colors">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+          <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+          <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+          <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.12a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.55-2.5 5.55-5.55C21.97 6.01 17.46 2 12 2z"/>
+        </svg>
+      </button>
     </aside>
 
     <aside class="search" aria-label="Search">
@@ -502,7 +541,6 @@
           <li><a href="https://www.webdesignerdepot.com/"><strong>Web Designer Depot</strong></a></li>
           <li><a href="https://www.adweek.com/">AdWeek</a></li>
           <li><a href="https://www.fastcompany.com/co-design"><strong>FastCo Design</strong></a></li>
-          <li><a href="https://create.adobe.com/">Adobe Create</a></li>
         </ul>
       </div>
       <div class="col">
@@ -520,7 +558,6 @@
           <li><a href="https://arstechnica.com/">Ars Technica</a></li>
           <li><a href="https://smashingmagazine.com/"><strong>Smashing Magazine</strong></a></li>
           <li><a href="https://alistapart.com/"><strong>A List Apart</strong></a></li>
-          <li><a href="https://www.codecademy.com/">Codecademy</a></li>
         </ul>
       </div>
     </section>
@@ -530,7 +567,7 @@
         <ul class="links">
           <li class="captitle">Comms</li>
           <li><strong><a href="https://www.gmail.com/">Gmail</a></strong> | <a href="https://mail.aol.com/">AOL</a> | <a href="https://mail.yahoo.com/d/folders/61">Y!</a></li>
-          <li><strong>G:</strong> <a href="https://drive.google.com/">Drive</a> | <a href="https://calendar.google.com/">Cal</a> | <a href="https://photos.google.com/">Pix</a> | <a href="https://voice.google.com/">Voice</a></li>
+          <li><strong>G:</strong> <a href="https://drive.google.com/drive/u/0/my-drive">Drive</a> | <a href="https://calendar.google.com/">Cal</a> | <a href="https://photos.google.com/">Pix</a> | <a href="https://voice.google.com/">Voice</a></li>
           <li><a href="https://www.messenger.com/">F/Messenger</a></li>
           <li class="captitle">Social</li>
           <li><a href="https://www.reddit.com/"><strong>Reddit</strong></a></li>
@@ -607,7 +644,6 @@
           <li><a href="https://weather.yahoo.com/us/va/reston/"><strong>YWeather</strong></a></li>
           <li><a href="https://maps.google.com/maps?q=1328+Sundial+Drive,+Reston,+VA"><strong>Google Maps</strong></a></li>
           <li><a href="https://www.mapquest.com/">MapQuest</a></li>
-          <li><a href="https://www.thrillist.com/washington-dc">Thrillist DC</a></li>
           <li><a href="https://reston.patch.com/"><strong>Reston Patch</strong></a></li>
           <li><a href="https://www.restonnow.com/">RestonNow</a></li>
           <li><a href="https://www.huffpost.com/dc/">Huffpost DC</a></li>
@@ -745,6 +781,18 @@
   label();
 })();
 
+/* ---------- Utility buttons: play the ring-fill on every click. Restarts
+   cleanly on rapid repeat clicks by dropping the class, forcing a reflow so
+   the browser registers the change, then re-adding it. ---------- */
+document.querySelectorAll(".util-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    btn.classList.remove("filling");
+    void btn.offsetWidth;
+    btn.classList.add("filling");
+  });
+  btn.addEventListener("animationend", () => btn.classList.remove("filling"));
+});
+
 /* ---------- Clock: 24-hour military time (e.g. 0930, 1745) ---------- */
 (() => {
   const el = document.getElementById("clock");
@@ -797,50 +845,50 @@
     ["#1B1F3B", "#FF9F1C", "#FFD23F", "#2EC4B6"]
   ];
 
-  const chosenPalette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
-  const colors = chosenPalette.map(hexToRgb);
   const bands = [0.42, 0.68, 0.87, 1.01];
+  const rand = (min, max) => Math.random() * (max - min) + min;
 
-  // Make the page's accent color echo whichever hero palette was just
-  // picked, instead of staying a fixed amber regardless of the animation.
-  // Not every palette color makes a good UI accent (some are pale creams
-  // or near-black tones meant for fills, not buttons/underlines), so pick
-  // whichever of the 4 has lightness closest to a legible mid-range value,
-  // then compute its own readable text color via real luminance rather
-  // than guessing.
-  (() => {
-    const lightness = ([r, g, b]) => {
-      r /= 255; g /= 255; b /= 255;
-      return (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
-    };
-    const relLuminance = ([r, g, b]) => {
-      const f = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
-      return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-    };
-    const darken = (rgb, amt) => rgb.map(c => Math.max(0, Math.round(c * (1 - amt))));
-    const toHex = rgb => "#" + rgb.map(c => c.toString(16).padStart(2, "0")).join("");
+  // Accent helpers. Not every palette color makes a good UI accent (some are
+  // pale creams or near-black tones meant for fills, not buttons), so the
+  // accent is whichever of the 4 has lightness closest to mid-range, with
+  // its readable text color computed from real luminance.
+  const lightness = ([r, g, b]) => {
+    r /= 255; g /= 255; b /= 255;
+    return (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
+  };
+  const relLuminance = ([r, g, b]) => {
+    const f = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  };
+  const darken = (rgb, amt) => rgb.map(c => Math.max(0, Math.round(c * (1 - amt))));
+  const toHex = rgb => "#" + rgb.map(c => c.toString(16).padStart(2, "0")).join("");
+
+  // Current state: re-assigned each time the colors are shuffled.
+  let paletteIndex = -1, colors = [], offX = 0, offY = 0, offT = 0;
+
+  // Picks a palette (never the same one twice in a row), gives the pattern
+  // a fresh layout, and re-derives the page's accent color to match.
+  const applyPalette = () => {
+    let next;
+    do { next = Math.floor(Math.random() * PALETTES.length); }
+    while (PALETTES.length > 1 && next === paletteIndex);
+    paletteIndex = next;
+    colors = PALETTES[next].map(hexToRgb);
+    offX = rand(0, 100); offY = rand(0, 100); offT = rand(0, 100);
 
     let best = colors[0], bestScore = Infinity;
-    for (const c of colors) {
-      const score = Math.abs(lightness(c) - 0.5);
-      if (score < bestScore) { bestScore = score; best = c; }
+    for (const col of colors) {
+      const score = Math.abs(lightness(col) - 0.5);
+      if (score < bestScore) { bestScore = score; best = col; }
     }
-
     const accent = toHex(best);
-    const accentDark = toHex(darken(best, 0.22));
-    const accentInk = relLuminance(best) > 0.4 ? "#16181C" : "#FFFFFF";
-
     const root = document.documentElement.style;
     root.setProperty("--accent", accent);
-    root.setProperty("--accent-dark", accentDark);
-    root.setProperty("--accent-ink", accentInk);
+    root.setProperty("--accent-dark", toHex(darken(best, 0.22)));
+    root.setProperty("--accent-ink", relLuminance(best) > 0.4 ? "#16181C" : "#FFFFFF");
     root.setProperty("--accent-soft", `${accent}24`);
-  })();
-
-  const rand = (min, max) => Math.random() * (max - min) + min;
-  const offX = rand(0, 100);
-  const offY = rand(0, 100);
-  const offT = rand(0, 100);
+  };
+  applyPalette();
 
   const noise = (x, y, t) =>
     Math.sin((x + offX) * 2.1 + (y + offY) * 1.3 + (t + offT) * 0.15)
@@ -916,6 +964,14 @@
 
   reduceMotion.addEventListener("change", sync);
   sync();
+
+  const shuffleBtn = document.getElementById("shuffle-colors");
+  if (shuffleBtn) {
+    shuffleBtn.addEventListener("click", () => {
+      applyPalette();
+      draw(performance.now() / 1000);
+    });
+  }
 })();
 
 
@@ -1038,7 +1094,6 @@
       ["Toilet ov Hell", "https://www.toiletovhell.com/"]
     ],
     "local": [
-      ["DCist", "https://dcist.com/"],
       ["ARLnow", "https://www.arlnow.com/"],
       ["NBC4 Washington", "https://www.nbcwashington.com/"],
       ["Northern Virginia Magazine", "https://northernvirginiamag.com/"],
@@ -1060,7 +1115,6 @@
       ["SlashGear", "https://www.slashgear.com/"],
       ["Android Authority", "https://www.androidauthority.com/"],
       ["TechRadar", "https://www.techradar.com/"],
-      ["Laptop Mag", "https://www.laptopmag.com/"],
       ["GSMArena", "https://www.gsmarena.com/"],
       ["9to5Toys", "https://9to5toys.com/"]
     ],
