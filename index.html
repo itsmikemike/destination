@@ -4,8 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Destination</title>
-<meta name="theme-color" content="#F2A93B" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#A85F0E" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0A0E13">
 <meta name="color-scheme" content="dark light">
 <script>
   try {
@@ -439,14 +438,10 @@
           <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>
         </svg>
       </button>
-      <button type="button" id="reshuffle" class="util-btn" aria-label="Refresh suggested links">
+      <button type="button" id="reshuffle" class="util-btn" aria-label="Refresh suggested links" title="Refresh suggested links">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 17l-2 2l2 2" />
-          <path d="M10 19h9a2 2 0 0 0 1.75 -2.75l-.55 -1" />
-          <path d="M8.536 11l-.732 -2.732l-2.732 .732" />
-          <path d="M7.804 8.268l-4.5 7.794a2 2 0 0 0 1.506 2.89l1.141 .024" />
-          <path d="M15.464 11l2.732 .732l.732 -2.732" />
-          <path d="M18.196 11.732l-4.5 -7.794a2 2 0 0 0 -3.256 -.14l-.591 .976" />
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
         </svg>
       </button>
       <button type="button" id="shuffle-colors" class="util-btn" aria-label="Shuffle colors" title="Shuffle colors">
@@ -887,6 +882,12 @@ document.querySelectorAll(".util-btn").forEach(btn => {
     root.setProperty("--accent-dark", toHex(darken(best, 0.22)));
     root.setProperty("--accent-ink", relLuminance(best) > 0.4 ? "#16181C" : "#FFFFFF");
     root.setProperty("--accent-soft", `${accent}24`);
+
+    // Tint the browser's own toolbar (where supported) with the palette's
+    // darkest color, measured by real luminance.
+    const darkest = colors.reduce((a, b) => relLuminance(b) < relLuminance(a) ? b : a);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", toHex(darkest));
   };
   applyPalette();
 
