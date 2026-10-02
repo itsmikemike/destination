@@ -124,21 +124,14 @@
 
   *, *::before, *::after { box-sizing: border-box; }
 
-  /* A thin full-width strip pinned to the top edge, in the palette's darkest
-     color. Safari 26 ignores the theme-color tag and instead tints its
-     toolbar from what sits at the top of the page, favoring fixed elements,
-     so this gives it a palette color to pick up. Experimental: Apple doesn't
-     document exactly how Safari chooses the color. */
-  .tint-strip {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
+  /* TEST: a Wired-style solid banner across the very top of the page, in
+     the palette's darkest color, to see whether Safari 26 tints its toolbar
+     from it. Full width, part of the page (scrolls away, not pinned). */
+  .wired-bar {
+    height: 40px;
     background: var(--tint, #0A0E13);
-    z-index: 10;
-    pointer-events: none;
   }
+
 
   html {
     background: var(--bg);
@@ -430,7 +423,7 @@
 </style>
 </head>
 <body>
-<div class="tint-strip" aria-hidden="true"></div>
+<div class="wired-bar" aria-hidden="true"></div>
 <div class="page">
   <header class="hero" aria-hidden="true">
     <canvas id="heroCanvas"></canvas>
