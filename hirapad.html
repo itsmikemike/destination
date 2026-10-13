@@ -4,10 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Hiragana">
+<meta name="theme-color" content="#F2F5F9">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
 <title>Hiragana Pad</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#F2F5F9; --surface:#FFFFFF; --tile:#FFF4CC; --tile-edge:#F3D96B;
@@ -19,7 +24,7 @@
   --bad:#D9483B; --bad-deep:#A93126; --bad-bg:#FBE2DE;
   --locked:#E3E7ED; --locked-deep:#C9D0DA; --sel:#FFF1BF;
   --ui:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
-  --kanaFont:"Klee One","Hiragino Mincho ProN","Yu Mincho",serif;
+  --kanaFont:"Kiwi Maru","Hiragino Mincho ProN","Yu Mincho",serif;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
@@ -56,7 +61,7 @@ button:focus-visible{outline:3px solid #4C8DF6;outline-offset:3px}
 
 /* ---------- top bar ---------- */
 .topbar{display:flex;align-items:center;gap:12px;padding:14px 20px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
-.brand{font-family:var(--kanaFont);font-weight:600;font-size:28px;color:var(--kana);margin-right:auto;letter-spacing:.02em}
+.brand{font-family:var(--kanaFont);font-weight:500;font-size:28px;color:var(--kana);margin-right:auto;letter-spacing:.02em}
 .brand small{font-family:var(--ui);font-weight:800;font-size:17px;color:var(--text);margin-left:8px}
 .stat{display:flex;align-items:center;gap:6px;font-weight:800;font-size:17px;padding:6px 10px;border-radius:12px}
 .stat svg{width:22px;height:22px}
@@ -69,7 +74,7 @@ button:focus-visible{outline:3px solid #4C8DF6;outline-offset:3px}
 .path{display:flex;flex-direction:column;align-items:center;gap:26px;padding:60px 0 60px}
 .node{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
 .nodebtn{width:92px;height:86px;border-radius:50%;border:none;display:grid;place-items:center;
-  font-family:var(--kanaFont);font-weight:600;font-size:40px;transition:transform .08s}
+  font-family:var(--kanaFont);font-weight:500;font-size:40px;transition:transform .08s}
 .nodebtn:active{transform:translateY(5px)}
 .node.done .nodebtn{background:var(--gold);color:var(--gold-text);box-shadow:0 7px 0 var(--gold-deep)}
 .node.current .nodebtn{background:var(--tile);color:var(--kana);box-shadow:0 7px 0 var(--tile-edge),0 0 0 6px var(--bg),0 0 0 10px var(--tile-edge)}
@@ -90,7 +95,7 @@ button:focus-visible{outline:3px solid #4C8DF6;outline-offset:3px}
   align-items:center;justify-content:center;gap:1px;padding:6px 6px 10px;color:var(--kana);box-shadow:0 3px 0 var(--tile-edge)}
 .cell.blank{background:transparent;border-color:var(--line);box-shadow:none}
 .cell.unseen{opacity:.5}
-.cell .k{font-family:var(--kanaFont);font-weight:600;font-size:clamp(26px,5vw,38px);line-height:1.1}
+.cell .k{font-family:var(--kanaFont);font-weight:500;font-size:clamp(26px,5vw,38px);line-height:1.1}
 .cell .r{font-weight:700;font-size:15px;letter-spacing:.04em}
 .meter{width:62%;height:8px;border-radius:5px;background:rgba(207,154,0,.18);margin-top:6px;overflow:hidden}
 .meter i{display:block;height:100%;background:var(--gold);border-radius:5px}
@@ -105,7 +110,7 @@ button:focus-visible{outline:3px solid #4C8DF6;outline-offset:3px}
 .practice h2{font-size:26px;margin:0 0 8px}
 .practice p{color:var(--muted);line-height:1.6;margin:0 0 22px}
 .weak{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:26px}
-.weak span{font-family:var(--kanaFont);font-weight:600;font-size:30px;width:58px;height:58px;display:grid;place-items:center;border-radius:14px;background:var(--tile);color:var(--kana);border:2px solid var(--tile-edge)}
+.weak span{font-family:var(--kanaFont);font-weight:500;font-size:30px;width:58px;height:58px;display:grid;place-items:center;border-radius:14px;background:var(--tile);color:var(--kana);border:2px solid var(--tile-edge)}
 
 /* ---------- buttons ---------- */
 .btn{border:none;border-radius:16px;padding:16px 30px;font-weight:800;font-size:18px;letter-spacing:.02em;min-width:170px;transition:transform .06s}
@@ -129,7 +134,7 @@ button:focus-visible{outline:3px solid #4C8DF6;outline-offset:3px}
 .stage{flex:1;overflow:auto;padding:10px 24px 24px;max-width:1000px;width:100%;margin:0 auto;display:flex;flex-direction:column}
 .prompt{font-size:clamp(22px,3vw,30px);font-weight:800;margin:6px 0 22px}
 .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px}
-.bigkana{font-family:var(--kanaFont);font-weight:600;color:var(--kana);line-height:1}
+.bigkana{font-family:var(--kanaFont);font-weight:500;color:var(--kana);line-height:1}
 .kcard{background:var(--tile);border:3px solid var(--tile-edge);box-shadow:0 5px 0 var(--tile-edge);border-radius:28px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px 34px 18px}
 .kcard .bigkana{font-size:clamp(110px,16vw,170px)}
@@ -142,7 +147,7 @@ button:focus-visible{outline:3px solid #4C8DF6;outline-offset:3px}
 .options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:100%;max-width:620px}
 .opt{background:var(--surface);border:2px solid var(--line);box-shadow:0 4px 0 var(--line);border-radius:18px;padding:18px 10px;
   font-weight:800;font-size:26px;min-height:84px;transition:transform .06s}
-.opt.kana{font-family:var(--kanaFont);font-weight:600;font-size:52px;padding:10px;color:var(--kana)}
+.opt.kana{font-family:var(--kanaFont);font-weight:500;font-size:52px;padding:10px;color:var(--kana)}
 .opt:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
 .opt[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 4px 0 var(--gold-deep);background:var(--sel)}
 .opt.right{border-color:var(--ok);background:var(--ok-bg);box-shadow:0 4px 0 var(--ok)}
@@ -182,12 +187,12 @@ button:focus-visible{outline:3px solid #4C8DF6;outline-offset:3px}
 .foot.ok h3{color:var(--ok)} .foot.bad h3{color:var(--bad)}
 .fmsg p{margin:2px 0 0;font-size:17px;font-weight:700}
 .foot.ok p{color:var(--ok-deep)} .foot.bad p{color:var(--bad-deep)}
-.fmsg .kk{font-family:var(--kanaFont);font-weight:600;font-size:24px}
+.fmsg .kk{font-family:var(--kanaFont);font-weight:500;font-size:24px}
 .override{background:none;border:none;text-decoration:underline;font-weight:800;font-size:15px;color:var(--bad-deep);padding:4px 0;margin-top:2px}
 
 .done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center}
 .done h2{font-size:34px;margin:0;color:var(--kana)}
-.done .seal{font-family:var(--kanaFont);font-weight:600;font-size:64px;color:var(--kana);width:170px;height:170px;border-radius:50%;
+.done .seal{font-family:var(--kanaFont);font-weight:500;font-size:64px;color:var(--kana);width:170px;height:170px;border-radius:50%;
   display:grid;place-items:center;background:var(--tile);border:4px solid var(--tile-edge);box-shadow:0 7px 0 var(--tile-edge)}
 .done .seal.fail{color:var(--bad);border-color:var(--bad);box-shadow:0 7px 0 var(--bad-deep);background:var(--bad-bg)}
 .stats{display:flex;gap:14px}
@@ -311,35 +316,15 @@ const NODES = [
 const ALL = ROWS.flatMap(r=>[...r.chars]);
 const rowById = id => ROWS.find(r=>r.id===id);
 
-/* ================= progress (local + Claude db) ================= */
+/* ================= progress (saved in this browser) ================= */
 const LSKEY = 'hiragana-pad-v1';
 const blank = () => ({v:1, xp:0, streak:0, lastDay:'', completed:{}, mastery:{}, seen:{}, unlockAll:false, sound:true, updatedAt:0});
 let P = blank();
 try { const s = localStorage.getItem(LSKEY); if (s) P = Object.assign(blank(), JSON.parse(s)); } catch(e){}
-let cloud = null, cloudPath = null, pushTimer = null;
 function save(){
   P.updatedAt = Date.now();
   try { localStorage.setItem(LSKEY, JSON.stringify(P)); } catch(e){}
-  if (cloud){ clearTimeout(pushTimer); pushTimer = setTimeout(()=>{ cloud.doc(cloudPath).set(JSON.parse(JSON.stringify(P))).catch(()=>{}); }, 1200); }
 }
-(async function initCloud(){
-  try{
-    if (!window.claude || !window.claude.use) return;
-    const [db, user] = await Promise.all([claude.use('db'), claude.use('user')]);
-    if (!db || !user) return;
-    const id = await user.id(); if (!id) return;
-    cloud = db; cloudPath = 'data/users/' + id + '/progress';
-    const snap = await db.doc(cloudPath).get();
-    if (snap.exists){
-      const remote = snap.data();
-      if ((remote.updatedAt||0) > (P.updatedAt||0)){
-        P = Object.assign(blank(), remote);
-        try { localStorage.setItem(LSKEY, JSON.stringify(P)); } catch(e){}
-        if (!lessonOpen) render();
-      } else if ((P.updatedAt||0) > (remote.updatedAt||0)) save();
-    } else if (P.updatedAt) save();
-  }catch(e){ cloud = null; }
-})();
 
 const mastery = c => P.mastery[c] || 0;
 const seenList = () => ALL.filter(c=>P.seen[c]);
@@ -398,7 +383,7 @@ function confirmBox(title, body, yes, onYes){
 const GLYPH_SCALE = 0.74;
 function drawGlyph(ctx, ch, size, color){
   ctx.save();
-  ctx.font = `600 ${size*GLYPH_SCALE}px "Klee One","Hiragino Mincho ProN","Yu Mincho",serif`;
+  ctx.font = `500 ${size*GLYPH_SCALE}px "Kiwi Maru","Hiragino Mincho ProN","Yu Mincho",serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = color;
   const m = ctx.measureText(ch);
   const asc = m.actualBoundingBoxAscent || size*0.6, desc = m.actualBoundingBoxDescent || size*0.1;
@@ -408,7 +393,7 @@ function drawGlyph(ctx, ch, size, color){
   ctx.restore();
 }
 const fontsReady = (async () => {
-  try { await Promise.all([document.fonts.load(`600 100px "Klee One"`, ALL.join('')), document.fonts.load(`400 100px "Klee One"`, 'あ')]); } catch(e){}
+  try { await Promise.all([document.fonts.load(`500 100px "Kiwi Maru"`, ALL.join('') + 'ひらがなよしまた'), document.fonts.load(`400 100px "Kiwi Maru"`, 'あ')]); } catch(e){}
 })();
 
 /* ================= grader ================= */
