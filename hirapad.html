@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Hiragana Pad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5F9; --surface:#FFFFFF; --tile:#FFF4CC; --tile-edge:#F3D96B;
+  --gold:#F4C430; --gold-deep:#CF9A00; --gold-text:#5A3A00; --kana:#B8741A;
+  --text:#28303F; --muted:#687184; --line:#DDE2EA; --line-deep:#C5CCD7;
+  --ink:#22304F; --pad:#FFFEF8; --guide:#E7A99C; --ghost:rgba(184,116,26,.17);
+  --answer:rgba(46,158,91,.28);
+  --ok:#2E9E5B; --ok-deep:#1F7A43; --ok-bg:#DCF3E3;
+  --bad:#D9483B; --bad-deep:#A93126; --bad-bg:#FBE2DE;
+  --locked:#E3E7ED; --locked-deep:#C9D0DA; --sel:#FFF1BF;
+  --ui:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+  --kanaFont:"Klee One","Hiragino Mincho ProN","Yu Mincho",serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141922; --surface:#1D2430; --tile:#3A321E; --tile-edge:#6E5B20;
+    --gold:#F2C141; --gold-deep:#B58600; --gold-text:#2E1F00; --kana:#F2C46B;
+    --text:#ECE7DA; --muted:#A3AAB8; --line:#2E3747; --line-deep:#3C4759;
+    --ink:#F4ECDA; --pad:#202836; --guide:#7A4A43; --ghost:rgba(242,196,107,.18);
+    --answer:rgba(84,200,130,.30);
+    --ok:#3FBF74; --ok-deep:#2A8A52; --ok-bg:#1C3527;
+    --bad:#EE6656; --bad-deep:#B5463A; --bad-bg:#3A2220;
+    --locked:#2A3240; --locked-deep:#1F2631; --sel:#3D3420;
+  }
+}
+:root[data-theme="dark"]{
+    --bg:#141922; --surface:#1D2430; --tile:#3A321E; --tile-edge:#6E5B20;
+    --gold:#F2C141; --gold-deep:#B58600; --gold-text:#2E1F00; --kana:#F2C46B;
+    --text:#ECE7DA; --muted:#A3AAB8; --line:#2E3747; --line-deep:#3C4759;
+    --ink:#F4ECDA; --pad:#202836; --guide:#7A4A43; --ghost:rgba(242,196,107,.18);
+    --answer:rgba(84,200,130,.30);
+    --ok:#3FBF74; --ok-deep:#2A8A52; --ok-bg:#1C3527;
+    --bad:#EE6656; --bad-deep:#B5463A; --bad-bg:#3A2220;
+    --locked:#2A3240; --locked-deep:#1F2631; --sel:#3D3420;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--ui);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid #4C8DF6;outline-offset:3px}
+.app{height:100%;display:flex;flex-direction:column;max-width:1100px;margin:0 auto}
+
+/* ---------- top bar ---------- */
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 20px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+.brand{font-family:var(--kanaFont);font-weight:600;font-size:28px;color:var(--kana);margin-right:auto;letter-spacing:.02em}
+.brand small{font-family:var(--ui);font-weight:800;font-size:17px;color:var(--text);margin-left:8px}
+.stat{display:flex;align-items:center;gap:6px;font-weight:800;font-size:17px;padding:6px 10px;border-radius:12px}
+.stat svg{width:22px;height:22px}
+.tabs{display:flex;gap:6px;padding:0 20px 10px}
+.tab{border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 18px;font-weight:800;font-size:16px;color:var(--muted)}
+.tab[aria-selected="true"]{border-color:var(--tile-edge);background:var(--tile);color:var(--kana)}
+.view{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px 20px 40px}
+
+/* ---------- path ---------- */
+.path{display:flex;flex-direction:column;align-items:center;gap:26px;padding:60px 0 60px}
+.node{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
+.nodebtn{width:92px;height:86px;border-radius:50%;border:none;display:grid;place-items:center;
+  font-family:var(--kanaFont);font-weight:600;font-size:40px;transition:transform .08s}
+.nodebtn:active{transform:translateY(5px)}
+.node.done .nodebtn{background:var(--gold);color:var(--gold-text);box-shadow:0 7px 0 var(--gold-deep)}
+.node.current .nodebtn{background:var(--tile);color:var(--kana);box-shadow:0 7px 0 var(--tile-edge),0 0 0 6px var(--bg),0 0 0 10px var(--tile-edge)}
+.node.locked .nodebtn{background:var(--locked);color:var(--muted);box-shadow:0 7px 0 var(--locked-deep)}
+.node .lbl{font-weight:800;font-size:15px;color:var(--muted)}
+.node.current .lbl{color:var(--kana)}
+.bubble{position:absolute;top:-40px;background:var(--surface);border:2px solid var(--tile-edge);color:var(--kana);
+  font-weight:800;font-size:15px;padding:5px 14px;border-radius:12px;white-space:nowrap;animation:bob 1.6s ease-in-out infinite}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-8px;width:12px;height:12px;background:var(--surface);
+  border-right:2px solid var(--tile-edge);border-bottom:2px solid var(--tile-edge);transform:translateX(-50%) rotate(45deg)}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.node svg{width:38px;height:38px}
+
+/* ---------- chart ---------- */
+.chartwrap{max-width:620px;margin:0 auto;padding-top:10px}
+.chart{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.cell{aspect-ratio:1.2/1;border-radius:18px;border:3px solid var(--tile-edge);background:var(--tile);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;padding:6px 6px 10px;color:var(--kana);box-shadow:0 3px 0 var(--tile-edge)}
+.cell.blank{background:transparent;border-color:var(--line);box-shadow:none}
+.cell.unseen{opacity:.5}
+.cell .k{font-family:var(--kanaFont);font-weight:600;font-size:clamp(26px,5vw,38px);line-height:1.1}
+.cell .r{font-weight:700;font-size:15px;letter-spacing:.04em}
+.meter{width:62%;height:8px;border-radius:5px;background:rgba(207,154,0,.18);margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--gold);border-radius:5px}
+.chartnote{color:var(--muted);font-size:15px;line-height:1.6;margin:0 0 16px;text-align:center}
+.settings{margin:30px auto 0;max-width:620px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.chip{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;font-weight:700;font-size:15px}
+.chip[aria-pressed="true"]{border-color:var(--tile-edge);background:var(--tile);color:var(--kana)}
+.chip.warn{color:var(--bad)}
+
+/* ---------- practice ---------- */
+.practice{max-width:560px;margin:30px auto;text-align:center}
+.practice h2{font-size:26px;margin:0 0 8px}
+.practice p{color:var(--muted);line-height:1.6;margin:0 0 22px}
+.weak{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:26px}
+.weak span{font-family:var(--kanaFont);font-weight:600;font-size:30px;width:58px;height:58px;display:grid;place-items:center;border-radius:14px;background:var(--tile);color:var(--kana);border:2px solid var(--tile-edge)}
+
+/* ---------- buttons ---------- */
+.btn{border:none;border-radius:16px;padding:16px 30px;font-weight:800;font-size:18px;letter-spacing:.02em;min-width:170px;transition:transform .06s}
+.btn:active:not(:disabled){transform:translateY(4px);box-shadow:none!important}
+.btn.primary{background:var(--gold);color:var(--gold-text);box-shadow:0 4px 0 var(--gold-deep)}
+.btn.primary:disabled{background:var(--locked);color:var(--muted);box-shadow:0 4px 0 var(--locked-deep);cursor:default}
+.btn.ok{background:var(--ok);color:#fff;box-shadow:0 4px 0 var(--ok-deep)}
+.btn.bad{background:var(--bad);color:#fff;box-shadow:0 4px 0 var(--bad-deep)}
+.btn.ghost{background:transparent;border:2px solid var(--line-deep);box-shadow:0 3px 0 var(--line-deep);min-width:0;padding:12px 18px;font-size:16px}
+
+/* ---------- lesson ---------- */
+.lesson{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:20;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.lhead{display:flex;align-items:center;gap:16px;padding:16px 24px;max-width:1000px;width:100%;margin:0 auto}
+.iconbtn{background:none;border:none;padding:8px;border-radius:10px;color:var(--muted);display:grid;place-items:center}
+.iconbtn svg{width:26px;height:26px}
+.pbar{flex:1;height:18px;border-radius:10px;background:var(--locked);overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:var(--gold);border-radius:10px;transition:width .35s ease;box-shadow:inset 0 -5px 0 rgba(0,0,0,.08)}
+.hearts{display:flex;align-items:center;gap:6px;font-weight:800;font-size:18px;color:var(--bad)}
+.hearts svg{width:26px;height:26px}
+.stage{flex:1;overflow:auto;padding:10px 24px 24px;max-width:1000px;width:100%;margin:0 auto;display:flex;flex-direction:column}
+.prompt{font-size:clamp(22px,3vw,30px);font-weight:800;margin:6px 0 22px}
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px}
+.bigkana{font-family:var(--kanaFont);font-weight:600;color:var(--kana);line-height:1}
+.kcard{background:var(--tile);border:3px solid var(--tile-edge);box-shadow:0 5px 0 var(--tile-edge);border-radius:28px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px 34px 18px}
+.kcard .bigkana{font-size:clamp(110px,16vw,170px)}
+.kcard .rom{font-size:28px;font-weight:800;color:var(--kana);margin-top:6px;letter-spacing:.05em}
+.speak{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:2px solid var(--line);box-shadow:0 3px 0 var(--line);
+  border-radius:14px;padding:10px 16px;font-weight:800;font-size:16px;color:#3B82D8}
+.speak svg{width:24px;height:24px}
+.speak.big{padding:18px 26px;border-radius:20px}
+.speak.big svg{width:40px;height:40px}
+.options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:100%;max-width:620px}
+.opt{background:var(--surface);border:2px solid var(--line);box-shadow:0 4px 0 var(--line);border-radius:18px;padding:18px 10px;
+  font-weight:800;font-size:26px;min-height:84px;transition:transform .06s}
+.opt.kana{font-family:var(--kanaFont);font-weight:600;font-size:52px;padding:10px;color:var(--kana)}
+.opt:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.opt[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 4px 0 var(--gold-deep);background:var(--sel)}
+.opt.right{border-color:var(--ok);background:var(--ok-bg);box-shadow:0 4px 0 var(--ok)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg);box-shadow:0 4px 0 var(--bad)}
+.opt:disabled{cursor:default}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:14px 40px;width:100%;max-width:560px}
+.match .col{display:flex;flex-direction:column;gap:12px}
+.opt.gone{opacity:.25;box-shadow:none}
+.opt.flash{border-color:var(--bad);background:var(--bad-bg)}
+
+.intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:34px;align-items:center;flex:1}
+.introL{display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
+.hook{max-width:340px;color:var(--muted);font-size:17px;line-height:1.6;margin:0}
+.hook b{color:var(--text)}
+.introR,.writeWrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.padlabel{font-weight:800;color:var(--muted);font-size:16px;align-self:center}
+
+/* the writing pad: genkō-yōshi practice square */
+.pad{position:relative;width:min(470px,78vw,52vh);aspect-ratio:1;border-radius:22px;background:var(--pad);
+  border:3px solid var(--tile-edge);box-shadow:0 5px 0 var(--tile-edge);touch-action:none;overflow:hidden}
+.pad::before,.pad::after{content:"";position:absolute;pointer-events:none}
+.pad::before{left:calc(50% - 1px);top:12px;bottom:12px;width:2px;background-image:linear-gradient(var(--guide) 55%,transparent 0);background-size:2px 18px}
+.pad::after{top:calc(50% - 1px);left:12px;right:12px;height:2px;background-image:linear-gradient(90deg,var(--guide) 55%,transparent 0);background-size:18px 2px}
+.pad canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;z-index:1}
+.padtools{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.padmsg{min-height:26px;font-weight:800;font-size:17px}
+.padmsg.ok{color:var(--ok)} .padmsg.bad{color:var(--bad)}
+
+.foot{border-top:2px solid var(--line);background:var(--bg);transition:background .2s}
+.footin{max-width:1000px;margin:0 auto;padding:20px 24px;display:flex;align-items:center;gap:18px;min-height:110px}
+.foot.ok{background:var(--ok-bg);border-color:transparent}
+.foot.bad{background:var(--bad-bg);border-color:transparent}
+.fmsg{flex:1;display:flex;align-items:center;gap:14px;min-width:0}
+.fmsg .badge{width:54px;height:54px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--surface)}
+.fmsg .badge svg{width:32px;height:32px}
+.fmsg h3{margin:0;font-size:22px}
+.foot.ok h3{color:var(--ok)} .foot.bad h3{color:var(--bad)}
+.fmsg p{margin:2px 0 0;font-size:17px;font-weight:700}
+.foot.ok p{color:var(--ok-deep)} .foot.bad p{color:var(--bad-deep)}
+.fmsg .kk{font-family:var(--kanaFont);font-weight:600;font-size:24px}
+.override{background:none;border:none;text-decoration:underline;font-weight:800;font-size:15px;color:var(--bad-deep);padding:4px 0;margin-top:2px}
+
+.done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center}
+.done h2{font-size:34px;margin:0;color:var(--kana)}
+.done .seal{font-family:var(--kanaFont);font-weight:600;font-size:64px;color:var(--kana);width:170px;height:170px;border-radius:50%;
+  display:grid;place-items:center;background:var(--tile);border:4px solid var(--tile-edge);box-shadow:0 7px 0 var(--tile-edge)}
+.done .seal.fail{color:var(--bad);border-color:var(--bad);box-shadow:0 7px 0 var(--bad-deep);background:var(--bad-bg)}
+.stats{display:flex;gap:14px}
+.statcard{border:3px solid var(--gold);border-radius:18px;overflow:hidden;min-width:130px;background:var(--surface)}
+.statcard b{display:block;background:var(--gold);color:var(--gold-text);font-size:14px;padding:6px}
+.statcard span{display:block;font-size:28px;font-weight:800;padding:12px}
+
+.modal{position:fixed;inset:0;background:rgba(10,15,25,.45);display:grid;place-items:center;z-index:40;padding:20px}
+.dialog{background:var(--surface);border-radius:24px;padding:28px;max-width:420px;width:100%;text-align:center}
+.dialog h3{margin:0 0 8px;font-size:22px}
+.dialog p{color:var(--muted);line-height:1.6;margin:0 0 20px}
+.dialog .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--bg);
+  padding:12px 18px;border-radius:14px;font-weight:700;z-index:60}
+
+@media (max-width:820px){
+  .intro{grid-template-columns:1fr;gap:20px}
+  .kcard .bigkana{font-size:110px}
+}
+@media (prefers-reduced-motion:reduce){
+  .bubble{animation:none}
+  .pbar i{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="brand">ひらがな<small>Hiragana Pad</small></div>
+    <div class="stat" title="Day streak" style="color:#E8772E">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3.5 5 5.6 5 10.5A5 5 0 0 1 7 12.5c0-2 1-3.6 2.2-4.6.2 1.6 1 2.6 2 3C11 8 10.6 5 12 2z"/></svg>
+      <span id="streak">0</span>
+    </div>
+    <div class="stat" title="Total XP" style="color:var(--gold-deep)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2l-5.9 3.2 1.3-6.5L2.5 9.3l6.6-.8z"/></svg>
+      <span id="xp">0</span>
+    </div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="learn" aria-selected="true">Learn</button>
+    <button class="tab" role="tab" data-tab="chart" aria-selected="false">Chart</button>
+    <button class="tab" role="tab" data-tab="practice" aria-selected="false">Practice</button>
+  </div>
+  <div class="view" id="view"></div>
+</div>
+
+<script>
+(() => {
+/* ================= data ================= */
+const ROWS = [
+  {id:'a', label:'Vowels',  chars:'あいうえお'},
+  {id:'k', label:'K row',   chars:'かきくけこ'},
+  {id:'s', label:'S row',   chars:'さしすせそ'},
+  {id:'t', label:'T row',   chars:'たちつてと'},
+  {id:'n', label:'N row',   chars:'なにぬねの'},
+  {id:'h', label:'H row',   chars:'はひふへほ'},
+  {id:'m', label:'M row',   chars:'まみむめも'},
+  {id:'y', label:'Y row',   chars:'やゆよ'},
+  {id:'r', label:'R row',   chars:'らりるれろ'},
+  {id:'w', label:'W row + n', chars:'わをん'},
+];
+const ROMA = {あ:'a',い:'i',う:'u',え:'e',お:'o',か:'ka',き:'ki',く:'ku',け:'ke',こ:'ko',さ:'sa',し:'shi',す:'su',せ:'se',そ:'so',
+  た:'ta',ち:'chi',つ:'tsu',て:'te',と:'to',な:'na',に:'ni',ぬ:'nu',ね:'ne',の:'no',は:'ha',ひ:'hi',ふ:'fu',へ:'he',ほ:'ho',
+  ま:'ma',み:'mi',む:'mu',め:'me',も:'mo',や:'ya',ゆ:'yu',よ:'yo',ら:'ra',り:'ri',る:'ru',れ:'re',ろ:'ro',わ:'wa',を:'o',ん:'n'};
+const HOOKS = {
+  あ:'A stick figure cradling a big round <b>a</b>pple — "ah!"',
+  い:'Two <b>ee</b>ls swimming side by side.',
+  う:'A person with a little hat looking <b>oo</b>p at the sky.',
+  え:'A ninja mid-leap shouting "<b>eh</b>!"',
+  お:'A golfer and a flying ball — "<b>oh</b>!" (ball on the right, unlike あ)',
+  か:'A <b>ka</b>rate chop with a spark beside it.',
+  き:'A <b>key</b> with two teeth.',
+  く:'An open beak — "<b>cu</b>ckoo".',
+  け:'A <b>ke</b>g with a tap on the side.',
+  こ:'Two <b>co</b>i fish, one above the other.',
+  さ:'A signpost leaning — "<b>sa</b>y which way?" (mirror of ち)',
+  し:'A fishhook — <b>she</b> goes fishing.',
+  す:'A <b>swing</b> with a loop in the rope.',
+  せ:'A mouth open saying "<b>se</b>!" with a tooth inside.',
+  そ:'A zigzag of thread — <b>so</b>wing.',
+  た:'A <b>t</b> and an <b>a</b> squeezed together.',
+  ち:'A cheerleader — "<b>chee</b>r!" (mirror of さ)',
+  つ:'A <b>tsu</b>nami wave rolling in.',
+  て:'A hand reaching for a <b>te</b>lescope.',
+  と:'A <b>toe</b> with a splinter in it.',
+  な:'A <b>nu</b>n praying beside a cross.',
+  に:'A <b>knee</b> next to a stick.',
+  ぬ:'<b>Noo</b>dles on chopsticks — the loop is the twirl (め has none).',
+  ね:'A cat curling its tail — <b>ne</b>ko means cat.',
+  の:'A "<b>no</b> entry" sign — one swoop.',
+  は:'"<b>Ha</b>!" — like け with a loop at the bottom.',
+  ひ:'A big grin — "<b>hee</b> hee".',
+  ふ:'Mount <b>Fu</b>ji with its peaks.',
+  へ:'A single mountain peak — <b>he</b>ad to the top.',
+  ほ:'A <b>ho</b>e — は with one more bar on top.',
+  ま:'<b>Ma</b>ma\'s cross with a loop below.',
+  み:'A <b>me</b>ditating 21 — swirl then tail.',
+  む:'A cow saying "<b>moo</b>" with its tail flicked.',
+  め:'An eye — <b>me</b> means eye (ぬ without the loop).',
+  も:'A fishhook with <b>mo</b>re bait — two bars.',
+  や:'A <b>ya</b>k\'s horns.',
+  ゆ:'A fish making a <b>U</b>-turn.',
+  よ:'A <b>yo</b>-yo hanging on a string.',
+  ら:'A <b>ra</b>bbit — ears up top.',
+  り:'<b>Ree</b>ds by a river (taller than い).',
+  る:'A <b>roo</b>te that ends in a loop (ろ has no loop).',
+  れ:'A man kneeling — <b>re</b>st. Ends with a kick-up tail.',
+  ろ:'A <b>ro</b>ad: る without the loop.',
+  わ:'A <b>wa</b>sp curling up — like れ but rounded at the end.',
+  を:'Only used as the particle that marks an object. Sounds like <b>o</b>.',
+  ん:'Looks like a handwritten <b>n</b>.'
+};
+const CONFUSE = [['は','ほ','け'],['ぬ','め','の'],['ね','れ','わ'],['る','ろ','そ'],['さ','ち','き'],['い','り','こ'],['こ','に','た'],['あ','お','め'],['し','つ','く','へ'],['う','ら','つ'],['ま','も','ほ'],['す','む','お'],['ゆ','よ','ほ'],['ん','そ','と']];
+const NODES = [
+  {id:'a', row:'a'}, {id:'k', row:'k'}, {id:'rv1', review:['a','k'], label:'Review'},
+  {id:'s', row:'s'}, {id:'t', row:'t'}, {id:'rv2', review:['a','k','s','t'], label:'Review'},
+  {id:'n', row:'n'}, {id:'h', row:'h'}, {id:'rv3', review:['a','k','s','t','n','h'], label:'Review'},
+  {id:'m', row:'m'}, {id:'y', row:'y'}, {id:'rv4', review:['n','h','m','y'], label:'Review'},
+  {id:'r', row:'r'}, {id:'w', row:'w'}, {id:'final', review:ROWS.map(r=>r.id), label:'Final review'},
+];
+const ALL = ROWS.flatMap(r=>[...r.chars]);
+const rowById = id => ROWS.find(r=>r.id===id);
+
+/* ================= progress (local + Claude db) ================= */
+const LSKEY = 'hiragana-pad-v1';
+const blank = () => ({v:1, xp:0, streak:0, lastDay:'', completed:{}, mastery:{}, seen:{}, unlockAll:false, sound:true, updatedAt:0});
+let P = blank();
+try { const s = localStorage.getItem(LSKEY); if (s) P = Object.assign(blank(), JSON.parse(s)); } catch(e){}
+let cloud = null, cloudPath = null, pushTimer = null;
+function save(){
+  P.updatedAt = Date.now();
+  try { localStorage.setItem(LSKEY, JSON.stringify(P)); } catch(e){}
+  if (cloud){ clearTimeout(pushTimer); pushTimer = setTimeout(()=>{ cloud.doc(cloudPath).set(JSON.parse(JSON.stringify(P))).catch(()=>{}); }, 1200); }
+}
+(async function initCloud(){
+  try{
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([claude.use('db'), claude.use('user')]);
+    if (!db || !user) return;
+    const id = await user.id(); if (!id) return;
+    cloud = db; cloudPath = 'data/users/' + id + '/progress';
+    const snap = await db.doc(cloudPath).get();
+    if (snap.exists){
+      const remote = snap.data();
+      if ((remote.updatedAt||0) > (P.updatedAt||0)){
+        P = Object.assign(blank(), remote);
+        try { localStorage.setItem(LSKEY, JSON.stringify(P)); } catch(e){}
+        if (!lessonOpen) render();
+      } else if ((P.updatedAt||0) > (remote.updatedAt||0)) save();
+    } else if (P.updatedAt) save();
+  }catch(e){ cloud = null; }
+})();
+
+const mastery = c => P.mastery[c] || 0;
+const seenList = () => ALL.filter(c=>P.seen[c]);
+function bump(c, ok){ P.mastery[c] = Math.max(0, Math.min(5, mastery(c) + (ok?1:-1))); }
+function todayStr(d=new Date()){ return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function markStreak(){
+  const t = todayStr(); if (P.lastDay === t) return;
+  const y = new Date(); y.setDate(y.getDate()-1);
+  P.streak = (P.lastDay === todayStr(y)) ? P.streak + 1 : 1;
+  P.lastDay = t;
+}
+
+/* ================= audio ================= */
+let jaVoice = null;
+function pickVoice(){ if (!('speechSynthesis' in window)) return; const vs = speechSynthesis.getVoices(); jaVoice = vs.find(v=>/^ja/i.test(v.lang)) || null; }
+if ('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+const canListen = () => !!jaVoice && P.sound;
+function speak(c){
+  if (!P.sound || !('speechSynthesis' in window)) return;
+  try{
+    const u = new SpeechSynthesisUtterance(c === 'を' ? 'お' : c);
+    u.lang = 'ja-JP'; u.rate = 0.75; if (jaVoice) u.voice = jaVoice;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ================= helpers ================= */
+const $ = (s, r=document) => r.querySelector(s);
+const h = (tag, attrs={}, ...kids) => { const e = document.createElement(tag);
+  for (const k in attrs){ const v = attrs[k];
+    if (k==='class') e.className = v; else if (k==='html') e.innerHTML = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v===true?'':v); }
+  kids.flat().forEach(k => k!=null && e.append(k.nodeType ? k : document.createTextNode(k))); return e; };
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.random()*(i+1)|0; [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const pick = a => a[Math.random()*a.length|0];
+const ICON = {
+  speaker:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+  close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  heart:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.7 4.5c2.2 0 3.6 1.2 5.3 3 1.7-1.8 3.1-3 5.3-3 3.7 0 5.8 3.8 4.3 7.2C19.5 16.4 12 21 12 21z"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>',
+  book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 5.5c3-1.3 6-1.3 9 .8 3-2.1 6-2.1 9-.8V19c-3-1.3-6-1.3-9 .8-3-2.1-6-2.1-9-.8z"/><path d="M12 6.3v13.5"/></svg>',
+  trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 20h8"/></svg>'
+};
+function toast(msg){ const t = h('div',{class:'toast'},msg); document.body.append(t); setTimeout(()=>t.remove(), 2200); }
+function confirmBox(title, body, yes, onYes){
+  const m = h('div',{class:'modal'}, h('div',{class:'dialog',role:'dialog','aria-modal':'true'},
+    h('h3',{},title), h('p',{},body),
+    h('div',{class:'row'},
+      h('button',{class:'btn ghost',onclick:()=>m.remove()},'Cancel'),
+      h('button',{class:'btn primary',onclick:()=>{m.remove(); onYes();}}, yes))));
+  document.body.append(m);
+}
+
+/* ================= glyph drawing (shared by guide + grader) ================= */
+const GLYPH_SCALE = 0.74;
+function drawGlyph(ctx, ch, size, color){
+  ctx.save();
+  ctx.font = `600 ${size*GLYPH_SCALE}px "Klee One","Hiragino Mincho ProN","Yu Mincho",serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = color;
+  const m = ctx.measureText(ch);
+  const asc = m.actualBoundingBoxAscent || size*0.6, desc = m.actualBoundingBoxDescent || size*0.1;
+  const l = m.actualBoundingBoxLeft || 0, r = m.actualBoundingBoxRight || 0;
+  const x = size/2 + (l - r)/2;
+  ctx.fillText(ch, x, size/2 + (asc - desc)/2);
+  ctx.restore();
+}
+const fontsReady = (async () => {
+  try { await Promise.all([document.fonts.load(`600 100px "Klee One"`, ALL.join('')), document.fonts.load(`400 100px "Klee One"`, 'あ')]); } catch(e){}
+})();
+
+/* ================= grader ================= */
+function maskOf(canvas, N){
+  const d = canvas.getContext('2d').getImageData(0,0,N,N).data, m = new Uint8Array(N*N);
+  for (let i=0;i<N*N;i++) m[i] = d[i*4+3] > 90 ? 1 : 0; return m;
+}
+function dilate(m, N, r){
+  const out = new Uint8Array(N*N);
+  for (let y=0;y<N;y++) for (let x=0;x<N;x++){ if (!m[y*N+x]) continue;
+    for (let dy=-r;dy<=r;dy++){ const yy=y+dy; if (yy<0||yy>=N) continue;
+      for (let dx=-r;dx<=r;dx++){ const xx=x+dx; if (xx<0||xx>=N||dx*dx+dy*dy>r*r) continue; out[yy*N+xx]=1; } } }
+  return out;
+}
+function fscore(user, target, N, r){
+  const du = dilate(user,N,r), dt = dilate(target,N,r);
+  let u=0,t=0,up=0,tr=0;
+  for (let i=0;i<N*N;i++){ if (user[i]){u++; if (dt[i]) up++;} if (target[i]){t++; if (du[i]) tr++;} }
+  if (!u || !t) return 0;
+  const P_ = up/u, R_ = tr/t; return (P_+R_) ? 2*P_*R_/(P_+R_) : 0;
+}
+function bbox(m, N){
+  let x0=N,y0=N,x1=-1,y1=-1;
+  for (let y=0;y<N;y++) for (let x=0;x<N;x++) if (m[y*N+x]){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+  return x1<0 ? null : {x:x0,y:y0,w:x1-x0+1,h:y1-y0+1};
+}
+function fitInto(srcCanvas, box, N){
+  const c = document.createElement('canvas'); c.width = c.height = N;
+  const pad = N*0.12, s = Math.min((N-2*pad)/box.w, (N-2*pad)/box.h);
+  const w = box.w*s, hh = box.h*s;
+  c.getContext('2d').drawImage(srcCanvas, box.x, box.y, box.w, box.h, (N-w)/2, (N-hh)/2, w, hh);
+  return c;
+}
+function rasterStrokes(strokes, N, width){
+  const c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d');
+  x.strokeStyle = '#000'; x.lineCap = 'round'; x.lineJoin = 'round'; x.lineWidth = width;
+  for (const s of strokes){ x.beginPath(); s.forEach((p,i)=> i ? x.lineTo(p.x*N,p.y*N) : x.moveTo(p.x*N,p.y*N));
+    if (s.length===1) x.lineTo(s[0].x*N+0.01, s[0].y*N); x.stroke(); }
+  return c;
+}
+function grade(strokes, ch, mode){
+  if (!strokes.length) return 0;
+  const BIG = 128;
+  const tc = document.createElement('canvas'); tc.width = tc.height = BIG; drawGlyph(tc.getContext('2d'), ch, BIG, '#000');
+  const uc = rasterStrokes(strokes, BIG, BIG*0.075);
+  if (mode === 'trace'){
+    return fscore(maskOf(uc,BIG), maskOf(tc,BIG), BIG, 3);
+  }
+  const N = 72;
+  const ub = bbox(maskOf(uc,BIG),BIG), tb = bbox(maskOf(tc,BIG),BIG);
+  if (!ub || !tb || ub.w*ub.h < 60) return 0;
+  // stroke thickness after normalizing: redraw user strokes in normalized space for even line width
+  const s = Math.min((N*0.76)/ub.w, (N*0.76)/ub.h);
+  const ox = (N - ub.w*s)/2 - ub.x*s, oy = (N - ub.h*s)/2 - ub.y*s;
+  const un = document.createElement('canvas'); un.width = un.height = N; const ux = un.getContext('2d');
+  ux.lineCap='round'; ux.lineJoin='round'; ux.lineWidth = N*0.075; ux.strokeStyle='#000';
+  for (const st of strokes){ ux.beginPath(); st.forEach((p,i)=>{ const X=p.x*BIG*s+ox, Y=p.y*BIG*s+oy; i?ux.lineTo(X,Y):ux.moveTo(X,Y); });
+    if (st.length===1){ ux.lineTo(st[0].x*BIG*s+ox+0.01, st[0].y*BIG*s+oy); } ux.stroke(); }
+  const tn = fitInto(tc, tb, N);
+  // aspect sanity: very different proportions count against the score
+  const ar = (ub.w/ub.h) / (tb.w/tb.h), arPenalty = Math.min(1, Math.max(ar, 1/ar) > 2.2 ? 0.75 : 1);
+  return fscore(maskOf(un,N), maskOf(tn,N), N, 3) * arPenalty;
+}
+
+/* ================= writing pad ================= */
+function makePad({guide=null, label=''}={}){
+  const canvas = h('canvas',{'aria-label':label||'Writing pad'});
+  const el = h('div',{class:'pad'}, canvas);
+  const ctx = canvas.getContext('2d');
+  let strokes = [], cur = null, penSeen = false, size = 0, overlay = null, onChange = ()=>{}, locked = false;
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function resize(){
+    const r = el.getBoundingClientRect(); if (!r.width) return;
+    size = r.width; const dpr = Math.min(window.devicePixelRatio||1, 3);
+    canvas.width = Math.round(size*dpr); canvas.height = Math.round(size*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0); redraw();
+  }
+  function seg(a,b){
+    const base = size*0.042, pr = ((a.p||.5)+(b.p||.5))/2;
+    ctx.lineWidth = base*(0.55+0.9*pr);
+    ctx.beginPath(); ctx.moveTo(a.x*size,a.y*size); ctx.lineTo(b.x*size,b.y*size); ctx.stroke();
+  }
+  function redraw(){
+    ctx.clearRect(0,0,size,size);
+    if (guide) drawGlyph(ctx, guide, size, css('--ghost'));
+    if (overlay) drawGlyph(ctx, overlay, size, css('--answer'));
+    ctx.strokeStyle = css('--ink'); ctx.lineCap='round'; ctx.lineJoin='round';
+    for (const s of strokes){ if (s.length===1){ seg(s[0],{...s[0],x:s[0].x+0.0005}); continue; } for (let i=1;i<s.length;i++) seg(s[i-1],s[i]); }
+  }
+  function pt(e){ const r = canvas.getBoundingClientRect();
+    let p = e.pointerType==='pen' ? (e.pressure || .5) : .5;
+    return {x:(e.clientX-r.left)/r.width, y:(e.clientY-r.top)/r.height, p}; }
+  canvas.addEventListener('pointerdown', e => {
+    if (locked) return;
+    if (e.pointerType==='pen') penSeen = true;
+    if (penSeen && e.pointerType==='touch') return;  // palm rejection once the Pencil is in use
+    e.preventDefault(); canvas.setPointerCapture(e.pointerId);
+    cur = {id:e.pointerId, pts:[pt(e)]}; strokes.push(cur.pts); redraw();
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!cur || e.pointerId!==cur.id) return; e.preventDefault();
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    ctx.strokeStyle = css('--ink'); ctx.lineCap='round';
+    for (const ev of (evs.length?evs:[e])){ const p = pt(ev), last = cur.pts[cur.pts.length-1];
+      if (Math.hypot(p.x-last.x,p.y-last.y) < 0.002) continue; cur.pts.push(p); seg(last,p); }
+  });
+  const end = e => { if (!cur || e.pointerId!==cur.id) return; cur = null; onChange(); };
+  canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('touchstart', e => e.preventDefault(), {passive:false});
+  const ro = new ResizeObserver(resize); ro.observe(el);
+  fontsReady.then(redraw);
+  return {
+    el, get strokes(){return strokes;},
+    isEmpty:()=>!strokes.length,
+    clear(){ strokes=[]; overlay=null; redraw(); onChange(); },
+    undo(){ strokes.pop(); redraw(); onChange(); },
+    setOverlay(c){ overlay=c; redraw(); },
+    lock(v){ locked=v; },
+    onChange(fn){ onChange=fn; },
+    destroy(){ ro.disconnect(); }
+  };
+}
+function padTools(pad, extra=[]){
+  return h('div',{class:'padtools'},
+    h('button',{class:'btn ghost',onclick:()=>pad.undo()},'Undo'),
+    h('button',{class:'btn ghost',onclick:()=>pad.clear()},'Clear'), ...extra);
+}
+
+/* ================= lesson builders ================= */
+function distractors(c, pool, n=3){
+  const bad = x => x===c || ROMA[x]===ROMA[c];
+  const conf = CONFUSE.filter(g=>g.includes(c)).flat().filter(x=>!bad(x));
+  const out = [];
+  shuffle(conf).forEach(x=>{ if (out.length<2 && !out.includes(x)) out.push(x); });
+  shuffle(pool).forEach(x=>{ if (out.length<n && !bad(x) && !out.includes(x)) out.push(x); });
+  shuffle(ALL).forEach(x=>{ if (out.length<n && !bad(x) && !out.includes(x)) out.push(x); });
+  return out.slice(0,n);
+}
+const soundQ = c => ({t: canListen() && Math.random()<0.55 ? 'listen' : 'pickKana', c});
+function buildRow(row){
+  const news = [...row.chars], ex = [];
+  for (let i=0;i<news.length;i+=2){
+    const g = news.slice(i,i+2);
+    g.forEach(c=>ex.push({t:'intro',c}));
+    ex.push(...shuffle(g.flatMap(c=>[{t:'pickRomaji',c}, soundQ(c)])));
+  }
+  const old = shuffle(seenList().filter(c=>!news.includes(c))).slice(0,2);
+  const matchSet = shuffle([...news, ...old]).slice(0, Math.max(4, Math.min(5, news.length+old.length)));
+  const tail = [
+    ...(matchSet.length>=3 ? [{t:'match', cs:matchSet}] : []),
+    ...shuffle(news).slice(0,2).map(c=>({t:'write',c})),
+    ...old.map(c=>pick([{t:'pickRomaji',c}, soundQ(c), {t:'write',c}]))
+  ];
+  return {ex:[...ex, ...shuffle(tail)], pool:news};
+}
+function weightedChars(chars, n){
+  // lower mastery = more likely
+  const bag = chars.flatMap(c=>Array(6-mastery(c)).fill(c));
+  const out = new Set(); let guard=0;
+  while (out.size<Math.min(n,chars.length) && guard++<500) out.add(pick(bag));
+  return [...out];
+}
+function buildReview(chars, count=12){
+  const focus = weightedChars(chars, 8);
+  const ex = [];
+  focus.forEach((c,i)=> ex.push(i%3===2 ? {t:'write',c} : (i%2 ? soundQ(c) : {t:'pickRomaji',c})));
+  const extra = weightedChars(chars, 4);
+  extra.forEach(c=>ex.push(pick([{t:'pickRomaji',c},{t:'write',c},soundQ(c)])));
+  const m = shuffle(chars).slice(0,5);
+  if (m.length>=4) ex.splice(Math.floor(ex.length/2),0,{t:'match',cs:m});
+  return {ex:shuffle(ex).slice(0,count), pool:chars};
+}
+
+/* ================= lesson runner ================= */
+let lessonOpen = false;
+function startLesson({ex, pool, nodeId=null, title=''}){
+  lessonOpen = true;
+  const L = {queue:ex.map(e=>({...e})), idx:0, hearts:5, correct:0, answered:0, nodeId, pool, phase:'answer', cur:null, startedAt:Date.now()};
+  const pbar = h('i'); const heartsN = h('span',{},'5');
+  const stage = h('div',{class:'stage'});
+  const fmsg = h('div',{class:'fmsg'});
+  const btn = h('button',{class:'btn primary'},'Check');
+  const foot = h('div',{class:'foot'}, h('div',{class:'footin'}, fmsg, btn));
+  const root = h('div',{class:'lesson'},
+    h('div',{class:'lhead'},
+      h('button',{class:'iconbtn','aria-label':'Quit lesson',html:ICON.close,onclick:()=>confirmBox('Quit this lesson?','Progress in this lesson won\'t be saved, but your character mastery will.','Quit',close)}),
+      h('div',{class:'pbar',role:'progressbar','aria-label':'Lesson progress'},pbar),
+      h('div',{class:'hearts','aria-label':'Hearts'},h('span',{html:ICON.heart}),heartsN)),
+    stage, foot);
+  document.body.append(root);
+
+  function close(){ L.cur?.destroy?.(); root.remove(); lessonOpen=false; render(); }
+  function setBtn(label, cls, enabled=true){ btn.textContent=label; btn.className='btn '+cls; btn.disabled=!enabled; }
+  function updateBar(){ pbar.style.width = (100*L.idx/L.queue.length)+'%'; heartsN.textContent = L.hearts; }
+
+  function show(){
+    L.cur?.destroy?.(); stage.innerHTML=''; fmsg.innerHTML=''; foot.className='foot'; L.phase='answer';
+    updateBar();
+    if (L.idx >= L.queue.length) return finish(true);
+    const e = L.queue[L.idx];
+    L.cur = EX[e.t](e, {stage, pool:L.pool, ready:(v)=>setBtn(e.t==='intro'?'Continue':'Check','primary',v), autoResult:(r)=>feedback(r,e)});
+    setBtn(e.t==='intro'?'Continue':'Check','primary', e.t==='intro');
+    if (e.t==='match') btn.disabled = true;
+  }
+  function feedback(r, e){
+    L.phase='feedback'; L.answered++;
+    const ok = r.ok;
+    if (e.t!=='match') bump(e.c, ok);
+    if (ok) L.correct++; else {
+      L.hearts--; if (!e.retry) L.queue.push({...e, retry:true});
+    }
+    save();
+    foot.className = 'foot ' + (ok?'ok':'bad');
+    const txt = h('div',{}, h('h3',{}, ok ? pick(['Nice!','Correct!','Great job!','You got it!']) : 'Not quite'));
+    if (r.note) txt.append(h('p',{html:r.note}));
+    if (!ok && r.override){
+      txt.append(h('button',{class:'override',onclick:()=>{
+        bump(e.c,true); bump(e.c,true); L.hearts++; L.correct++; if (!e.retry) L.queue.pop();
+        save(); foot.className='foot ok'; txt.querySelector('h3').textContent='Counted as correct'; txt.querySelector('.override')?.remove();
+        setBtn('Continue','ok'); updateBar();
+      }}, 'I wrote it right — count it'));
+    }
+    fmsg.replaceChildren(h('div',{class:'badge',style:`color:var(${ok?'--ok':'--bad'})`,html:ok?ICON.check:ICON.x}), txt);
+    setBtn('Continue', ok?'ok':'bad');
+    updateBar();
+    if (e.c && (e.t==='pickKana'||e.t==='listen'||e.t==='pickRomaji')) speak(e.c);
+  }
+  btn.addEventListener('click', ()=>{
+    const e = L.queue[L.idx];
+    if (!e) return;
+    if (L.phase==='feedback' || e.t==='intro'){
+      if (L.phase==='feedback' && L.hearts<=0) return finish(false);
+      L.idx++; return show();
+    }
+    if (btn.disabled) return;
+    const r = L.cur.check(); if (r) feedback(r, e);
+  });
+  function finish(passed){
+    L.cur?.destroy?.(); stage.innerHTML=''; fmsg.innerHTML=''; foot.className='foot';
+    pbar.style.width = passed ? '100%' : pbar.style.width;
+    const acc = L.answered ? Math.round(100*L.correct/L.answered) : 100;
+    let gained = 0;
+    if (passed){
+      gained = 10 + (acc===100?5:0) + Math.round(L.correct/2);
+      P.xp += gained; markStreak(); if (L.nodeId) P.completed[L.nodeId]=true; save();
+    }
+    stage.append(h('div',{class:'done'},
+      h('div',{class:'seal'+(passed?'':' fail')}, passed ? 'よし' : 'また'),
+      h('h2',{style:passed?'':'color:var(--bad)'}, passed ? (title ? title + ' complete' : 'Lesson complete') : 'Out of hearts'),
+      passed ? h('div',{class:'stats'},
+          h('div',{class:'statcard'},h('b',{},'XP earned'),h('span',{},'+'+gained)),
+          h('div',{class:'statcard'},h('b',{},'Accuracy'),h('span',{},acc+'%')),
+          h('div',{class:'statcard'},h('b',{},'Time'),h('span',{}, fmtTime(Date.now()-L.startedAt))))
+        : h('p',{style:'color:var(--muted);font-size:18px;margin:0'},'The characters you missed got extra practice weight. Try the lesson again.')));
+    setBtn(passed?'Continue':'Back to path', 'primary');
+    btn.onclick = close; L.queue = [];
+  }
+  show();
+}
+const fmtTime = ms => { const s = Math.round(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+const romaDisplay = c => c==='を' ? 'o (wo)' : ROMA[c];
+
+/* ================= exercises ================= */
+const EX = {
+  intro(e, {stage}){
+    P.seen[e.c] = true; save();
+    const pad = makePad({guide:e.c, label:'Trace '+e.c});
+    const msg = h('div',{class:'padmsg'});
+    const checkBtn = h('button',{class:'btn ghost',onclick:()=>{
+      if (pad.isEmpty()){ msg.className='padmsg bad'; msg.textContent='Trace over the faint character first.'; return; }
+      const s = grade(pad.strokes, e.c, 'trace'), pct = Math.round(s*100);
+      if (s >= 0.68){ msg.className='padmsg ok'; msg.textContent = `Nice tracing — ${pct}% match`; }
+      else { msg.className='padmsg bad'; msg.textContent = `${pct}% match — clear and try following the shape more closely`; }
+    }},'Check tracing');
+    stage.append(h('div',{class:'prompt'},'New character'),
+      h('div',{class:'intro'},
+        h('div',{class:'introL'},
+          h('div',{class:'kcard'}, h('div',{class:'bigkana'},e.c), h('div',{class:'rom'},romaDisplay(e.c))),
+          h('button',{class:'speak',html:ICON.speaker+'<span>Hear it</span>',onclick:()=>speak(e.c)}),
+          h('p',{class:'hook',html:HOOKS[e.c]})),
+        h('div',{class:'introR'}, h('div',{class:'padlabel'},'Trace it with your Pencil'), pad.el, padTools(pad,[checkBtn]), msg)));
+    setTimeout(()=>speak(e.c), 250);
+    return {destroy:()=>pad.destroy()};
+  },
+  pickRomaji(e, {stage, pool, ready}){
+    const opts = shuffle([e.c, ...distractors(e.c, pool)]); let sel=null; const btns=[];
+    stage.append(h('div',{class:'prompt'},'What sound does this make?'),
+      h('div',{class:'center'},
+        h('div',{class:'kcard'}, h('div',{class:'bigkana'},e.c)),
+        h('div',{class:'options'}, opts.map(c=>{ const b = h('button',{class:'opt','aria-pressed':'false',onclick:()=>{
+          sel=c; btns.forEach(x=>x.setAttribute('aria-pressed', x===b)); ready(true);}}, romaDisplay(c)); btns.push(b); b._c=c; return b; }))));
+    ready(false);
+    return {check(){ btns.forEach(b=>{ b.disabled=true; if (b._c===e.c) b.classList.add('right'); else if (b._c===sel) b.classList.add('wrong'); });
+      return {ok: sel===e.c, note: sel===e.c ? `<span class="kk">${e.c}</span> is “${romaDisplay(e.c)}”` : `Correct answer: <span class="kk">${e.c}</span> = ${romaDisplay(e.c)}`}; }};
+  },
+  pickKana(e, ctx){ return kanaChoice(e, ctx, false); },
+  listen(e, ctx){ return kanaChoice(e, ctx, true); },
+  write(e, {stage, ready}){
+    const pad = makePad({label:'Write '+romaDisplay(e.c)});
+    pad.onChange(()=>ready(!pad.isEmpty()));
+    stage.append(h('div',{class:'prompt'},'Write it from memory'),
+      h('div',{class:'center'},
+        h('div',{style:'display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center'},
+          h('div',{class:'kcard',style:'padding:12px 30px;border-radius:20px'}, h('div',{class:'rom',style:'margin:0;font-size:38px'}, romaDisplay(e.c))),
+          h('button',{class:'speak',html:ICON.speaker+'<span>Hear it</span>',onclick:()=>speak(e.c)})),
+        h('div',{class:'writeWrap'}, pad.el, padTools(pad))));
+    ready(false);
+    return {
+      check(){ const s = grade(pad.strokes, e.c, 'write'), pct = Math.round(s*100), ok = s >= 0.62;
+        pad.setOverlay(e.c); pad.lock(true);
+        return {ok, override:!ok, note: ok ? `<span class="kk">${e.c}</span> — ${pct}% shape match` : `Compare with the green <span class="kk">${e.c}</span> (${pct}% match)`}; },
+      destroy:()=>pad.destroy()};
+  },
+  match(e, {stage, autoResult}){
+    const left = shuffle(e.cs), right = shuffle(e.cs); let selL=null, selR=null, left_n=e.cs.length, slips=0;
+    const mk = (c, side) => { const b = h('button',{class:'opt'+(side==='L'?' kana':''),'aria-pressed':'false'}, side==='L'?c:romaDisplay(c)); b._c=c; b._s=side; b.onclick=()=>tap(b); return b; };
+    const L_ = left.map(c=>mk(c,'L')), R_ = right.map(c=>mk(c,'R'));
+    function tap(b){
+      if (b.disabled) return;
+      if (b._s==='L'){ selL=b; L_.forEach(x=>x.setAttribute('aria-pressed',x===b)); speak(b._c); }
+      else { selR=b; R_.forEach(x=>x.setAttribute('aria-pressed',x===b)); }
+      if (selL && selR){
+        const a=selL, z=selR; selL=selR=null;
+        if (a._c===z._c){ [a,z].forEach(x=>{x.disabled=true; x.classList.add('right'); x.setAttribute('aria-pressed','false');});
+          bump(a._c,true); setTimeout(()=>{[a,z].forEach(x=>{x.classList.remove('right');x.classList.add('gone');});},350);
+          if (--left_n===0) setTimeout(()=>autoResult({ok:true, note: slips ? `${slips} mismatch${slips>1?'es':''} along the way` : 'Perfect matching'}), 450);
+        } else { slips++; bump(a._c,false); [a,z].forEach(x=>{x.classList.add('flash'); x.setAttribute('aria-pressed','false');});
+          setTimeout(()=>[a,z].forEach(x=>x.classList.remove('flash')),450); }
+      }
+    }
+    stage.append(h('div',{class:'prompt'},'Tap the matching pairs'),
+      h('div',{class:'center'}, h('div',{class:'match'}, h('div',{class:'col'},L_), h('div',{class:'col'},R_))));
+    return {check(){ return null; }};
+  }
+};
+function kanaChoice(e, {stage, pool, ready}, audioOnly){
+  const opts = shuffle([e.c, ...distractors(e.c, pool)]); let sel=null; const btns=[];
+  const head = audioOnly
+    ? h('button',{class:'speak big',html:ICON.speaker+'<span>Play again</span>',onclick:()=>speak(e.c)})
+    : h('div',{style:'display:flex;align-items:center;gap:16px'},
+        h('div',{class:'kcard',style:'padding:12px 30px;border-radius:20px'}, h('div',{class:'rom',style:'margin:0;font-size:38px'},romaDisplay(e.c))),
+        h('button',{class:'speak',html:ICON.speaker,'aria-label':'Hear it',onclick:()=>speak(e.c)}));
+  stage.append(h('div',{class:'prompt'}, audioOnly ? 'Tap what you hear' : 'Which character makes this sound?'),
+    h('div',{class:'center'}, head,
+      h('div',{class:'options'}, opts.map(c=>{ const b = h('button',{class:'opt kana','aria-pressed':'false',onclick:()=>{
+        sel=c; btns.forEach(x=>x.setAttribute('aria-pressed', x===b)); ready(true);}}, c); b._c=c; btns.push(b); return b; }))));
+  ready(false);
+  if (audioOnly) setTimeout(()=>speak(e.c), 300);
+  return {check(){ btns.forEach(b=>{ b.disabled=true; if (b._c===e.c) b.classList.add('right'); else if (b._c===sel) b.classList.add('wrong'); });
+    return {ok: sel===e.c, note: `<span class="kk">${e.c}</span> = ${romaDisplay(e.c)}`}; }};
+}
+
+/* ================= home views ================= */
+let tab = 'learn';
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{ tab=t.dataset.tab; render(); }));
+function nodeChars(n){ return n.row ? [...rowById(n.row).chars] : n.review.flatMap(id=>[...rowById(id).chars]); }
+function launchNode(n){
+  if (n.row){ const row=rowById(n.row); startLesson({...buildRow(row), nodeId:n.id, title:row.label}); }
+  else startLesson({...buildReview(nodeChars(n), n.id==='final'?16:12), nodeId:n.id, title:n.label});
+}
+function renderLearn(v){
+  const firstOpen = NODES.findIndex(n=>!P.completed[n.id]);
+  const offs = [0,70,105,70,0,-70,-105,-70];
+  const path = h('div',{class:'path'});
+  NODES.forEach((n,i)=>{
+    const done = !!P.completed[n.id], current = i===firstOpen, locked = !done && !current && !P.unlockAll && i>firstOpen;
+    const label = n.row ? rowById(n.row).label : n.label;
+    const face = n.row ? rowById(n.row).chars[0] : null;
+    const b = h('button',{class:'nodebtn','aria-label':label + (done?' — completed':locked?' — locked':''), html: face ? '' : (n.id==='final'?ICON.trophy:ICON.book)});
+    if (face) b.textContent = face;
+    b.onclick = () => locked
+      ? confirmBox(`Jump ahead to ${label}?`, 'Skipping is fine if you already know the earlier rows. You can come back to them anytime.', 'Start lesson', ()=>launchNode(n))
+      : launchNode(n);
+    const node = h('div',{class:'node '+(done?'done':current?'current':locked?'locked':'done'),style:`transform:translateX(${offs[i%offs.length]}px)`},
+      current ? h('div',{class:'bubble'}, P.xp ? 'Continue' : 'Start here') : null, b, h('div',{class:'lbl'},label));
+    if (!done && !current && !locked) node.className='node current';
+    path.append(node);
+  });
+  if (firstOpen === -1) path.prepend(h('p',{class:'chartnote'},'Every row complete. Keep it sharp in Practice — the weakest characters come up first.'));
+  v.append(path);
+  requestAnimationFrame(()=>{ const c = v.querySelector('.node.current'); if (c) c.scrollIntoView({block:'center'}); });
+}
+const CHART = ['あいうえお','かきくけこ','さしすせそ','たちつてと','なにぬねの','はひふへほ','まみむめも','や ゆ よ','らりるれろ','わ   を','ん    '];
+function renderChart(v){
+  const grid = h('div',{class:'chart'});
+  CHART.forEach(line=>[...line.padEnd(5,' ')].forEach(c=>{
+    if (c===' '){ grid.append(h('div',{class:'cell blank','aria-hidden':'true'})); return; }
+    const m = mastery(c);
+    const cell = h('button',{class:'cell'+(P.seen[c]?'':' unseen'),'aria-label':`${c} ${romaDisplay(c)}, mastery ${m} of 5`,onclick:()=>{
+      startLesson({ex:[{t:'intro',c},{t:'write',c},{t:'pickRomaji',c},soundQ(c)], pool:[...(ROWS.find(r=>r.chars.includes(c)).chars)], title:'Practice'}); }},
+      h('div',{class:'k'},c), h('div',{class:'r'},ROMA[c]), h('div',{class:'meter'}, h('i',{style:`width:${m*20}%`})));
+    grid.append(cell);
+  }));
+  const sound = h('button',{class:'chip','aria-pressed':String(P.sound),onclick:()=>{ P.sound=!P.sound; save(); render(); }}, P.sound?'Sound on':'Sound off');
+  const unlock = h('button',{class:'chip','aria-pressed':String(P.unlockAll),onclick:()=>{ P.unlockAll=!P.unlockAll; save(); render(); }}, 'Unlock all rows');
+  const reset = h('button',{class:'chip warn',onclick:()=>confirmBox('Reset all progress?','This clears your XP, streak, completed lessons and mastery bars.','Reset',()=>{ const s=P.sound; P=blank(); P.sound=s; save(); render(); })},'Reset progress');
+  v.append(h('div',{class:'chartwrap'},
+    h('p',{class:'chartnote'},'Bars fill as you get each character right. Tap any character for a quick drill.'),
+    grid, h('div',{class:'settings'}, sound, unlock, reset),
+    !jaVoice ? h('p',{class:'chartnote',style:'margin-top:16px'},'No Japanese voice found on this device, so listening questions are swapped for reading ones. On iPad: Settings → Accessibility → Spoken Content → Voices → Japanese.') : null));
+}
+function renderPractice(v){
+  const seen = seenList();
+  const box = h('div',{class:'practice'});
+  if (seen.length < 4){
+    box.append(h('h2',{},'Practice unlocks after your first lesson'),
+      h('p',{},'Learn a few characters on the path, then come back here to drill the ones that are slipping.'),
+      h('button',{class:'btn primary',onclick:()=>{ tab='learn'; render(); }},'Go to the path'));
+  } else {
+    const weak = seen.slice().sort((a,b)=>mastery(a)-mastery(b)).slice(0,8);
+    box.append(h('h2',{},'Practice your weakest characters'),
+      h('p',{},'A 12-question mix of reading, listening and writing, weighted toward these:'),
+      h('div',{class:'weak'}, weak.map(c=>h('span',{},c))),
+      h('button',{class:'btn primary',onclick:()=>startLesson({...buildReview(seen,12), title:'Practice'})},'Start practice'));
+  }
+  v.append(box);
+}
+function render(){
+  $('#streak').textContent = P.streak; $('#xp').textContent = P.xp;
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.tab===tab));
+  const v = $('#view'); v.innerHTML=''; v.scrollTop = 0;
+  ({learn:renderLearn, chart:renderChart, practice:renderPractice})[tab](v);
+}
+render();
+})();
+</script>
+</body>
+</html>
