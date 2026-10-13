@@ -140,6 +140,24 @@
     font: 13px/1.3 var(--font-body);
   }
 
+  /* Faint full-page copy of the particle field, behind everything. The body
+     goes transparent so the fixed canvas shows between sections; html keeps
+     the page color. Light theme multiplies it in as a soft tint instead. */
+  body { background: transparent; }
+  .bg-field {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.16;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme]) .bg-field { mix-blend-mode: multiply; opacity: 0.5; }
+  }
+  :root[data-theme="light"] .bg-field { mix-blend-mode: multiply; opacity: 0.5; }
+
   .page {
     width: min(89.3%, 1232px);
     margin-inline: auto;
@@ -909,8 +927,6 @@ document.querySelectorAll(".util-btn").forEach(btn => {
 
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
   const coarse = matchMedia("(pointer: coarse)").matches;
-  const N_TOTAL = coarse ? 50000 : 90000;
-  const nW = Math.floor(N_TOTAL * 0.55), nO = N_TOTAL - nW;
   const FOV = 40 * Math.PI / 180;
   const CAM_DIST = 1 / Math.tan(FOV / 2);   // slab's half-height fills the view
   const APERTURE = 0.016;
@@ -1090,8 +1106,29 @@ void main() {
   gl_FragColor = vec4(col, 1.0);
 }`;
 
-  const gl = canvas.getContext("webgl", { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: "high-performance" });
-  if (!gl) return;   // no WebGL: the hero's dark background shows instead
+  // Background version: particles + glow only, over a transparent canvas.
+  const BG_COMP_FRAG = `
+precision mediump float;
+uniform sampler2D uScene, uBloom;
+varying vec2 vUv;
+void main() {
+  vec3 col = texture2D(uScene, vUv).rgb + texture2D(uBloom, vUv).rgb * 0.9;
+  col = 1.0 - exp(-col * 1.25);
+  float a = clamp(max(col.r, max(col.g, col.b)), 0.0, 1.0);
+  col *= 0.5;   // background field is drawn 50% darker than the hero
+  gl_FragColor = vec4(col, a);
+}`;
+
+  const timeOffset = Math.random() * 200;   // a different starting layout each load
+  let simT = 0, frac = 1, ema = 1 / 60, frames = 0, calm = 0;
+
+  // Builds one particle field on a canvas. The hero and the page background
+  // each get one; they share the clock, palette and particle budget.
+  const makeField = (canvas, o) => {
+  const N_TOTAL = o.count;
+  const nW = Math.floor(N_TOTAL * 0.55), nO = N_TOTAL - nW;
+  const gl = canvas.getContext("webgl", { antialias: false, alpha: !!o.bg, premultipliedAlpha: true, depth: false, stencil: false, powerPreference: "high-performance" });
+  if (!gl) return null;
 
   const compile = (type, src) => {
     const s = gl.createShader(type);
@@ -1151,11 +1188,11 @@ void main() {
       part: program(VERT, FRAG, ["aPos", "aRnd"]),
       bright: program(TRI_VERT, BRIGHT_FRAG, ["aP"]),
       blur: program(TRI_VERT, BLUR_FRAG, ["aP"]),
-      comp: program(TRI_VERT, COMP_FRAG, ["aP"])
+      comp: program(TRI_VERT, o.bg ? BG_COMP_FRAG : COMP_FRAG, ["aP"])
     };
   } catch (err) {
     console.error(err);
-    return;
+    return null;
   }
   bufs.part = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, bufs.part);
@@ -1167,7 +1204,7 @@ void main() {
   maxPt = Math.max(2, Math.min(rng[1], 48));
 
   const resize = () => {
-    const dpr = Math.min(devicePixelRatio || 1, coarse ? 1.5 : 1.75);
+    const dpr = Math.min(devicePixelRatio || 1, o.dpr);
     const w = Math.max(2, Math.floor(canvas.clientWidth * dpr));
     const h = Math.max(2, Math.floor(canvas.clientHeight * dpr));
     if (rt.scene && w === canvas.width && h === canvas.height) return false;
@@ -1187,11 +1224,13 @@ void main() {
     ptr.ny = -(((e.clientY - r.top) / r.height) * 2 - 1);
     ptr.inside = true;
   };
-  canvas.addEventListener("pointermove", track);
-  canvas.addEventListener("pointerdown", track);
-  canvas.addEventListener("pointerleave", () => { ptr.inside = false; });
-  canvas.addEventListener("pointerup", e => { if (e.pointerType !== "mouse") ptr.inside = false; });
-  canvas.addEventListener("pointercancel", () => { ptr.inside = false; });
+  if (o.interactive) {
+    canvas.addEventListener("pointermove", track);
+    canvas.addEventListener("pointerdown", track);
+    canvas.addEventListener("pointerleave", () => { ptr.inside = false; });
+    canvas.addEventListener("pointerup", e => { if (e.pointerType !== "mouse") ptr.inside = false; });
+    canvas.addEventListener("pointercancel", () => { ptr.inside = false; });
+  }
 
   const persp = (fovy, asp, n, f) => {
     const t = 1 / Math.tan(fovy / 2);
@@ -1226,12 +1265,9 @@ void main() {
   };
   const bindTex = (unit, tex) => { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tex); };
 
-  const timeOffset = Math.random() * 200;   // a different starting layout each load
-  let simT = 0, frac = 1, ema = 1 / 60, frames = 0, calm = 0;
-
   const render = (dt, wallT) => {
     const W = canvas.width, H = canvas.height, asp = W / H;
-    const t = simT + timeOffset;
+    const t = simT + timeOffset + o.offset;
 
     // Gentle camera sway instead of a full orbit: the slab stays face-on.
     const yaw = 0.16 * Math.sin(wallT * 0.05), pitch = 0.10 + 0.05 * Math.sin(wallT * 0.037);
@@ -1308,14 +1344,39 @@ void main() {
     });
   };
 
-  let rafId = 0, lastT = 0, lost = false;
+  return { canvas, render, resize };
+  };
+
+  const fields = [];
+  const hero = makeField(canvas, { count: coarse ? 50000 : 90000, dpr: coarse ? 1.5 : 1.75, interactive: true, offset: 0 });
+  if (!hero) return;   // no WebGL: the hero's dark background shows instead
+  fields.push(hero);
+
+  const bgCanvas = document.createElement("canvas");
+  bgCanvas.className = "bg-field";
+  bgCanvas.setAttribute("aria-hidden", "true");
+  document.body.prepend(bgCanvas);
+  // Fewer particles at 1x resolution: it's faint, so the saving is invisible.
+  const bg = makeField(bgCanvas, { count: coarse ? 18000 : 36000, dpr: 1, bg: true, offset: 57 });
+  if (bg) fields.push(bg); else bgCanvas.remove();
+
+  for (const f of fields) {
+    f.canvas.addEventListener("webglcontextlost", e => {
+      e.preventDefault();
+      const i = fields.indexOf(f);
+      if (i >= 0) fields.splice(i, 1);
+      if (f !== hero) f.canvas.remove();
+    });
+  }
+
+  let rafId = 0, lastT = 0;
+  const drawAll = (dt, wallT) => { for (const f of fields) { f.resize(); f.render(dt, wallT); } };
   const frame = now => {
     rafId = requestAnimationFrame(frame);
     const dt = Math.min(0.05, Math.max(0.001, (now - lastT) / 1000));
     lastT = now;
     simT += dt;
-    resize();
-    render(dt, now / 1000);
+    drawAll(dt, now / 1000);
 
     // Shed particles on slow devices; win them back when there's headroom.
     ema += (dt - ema) * 0.05;
@@ -1325,9 +1386,8 @@ void main() {
       else calm = 0;
     }
   };
-  const still = () => { resize(); render(0.016, 0); };
+  const still = () => drawAll(0.016, 0);
   const sync = () => {
-    if (lost) return;
     if (reduceMotion.matches) {
       if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
       still();
@@ -1337,18 +1397,15 @@ void main() {
     }
   };
   reduceMotion.addEventListener("change", sync);
-  new ResizeObserver(() => { if (reduceMotion.matches && !lost) still(); }).observe(canvas);
-  canvas.addEventListener("webglcontextlost", e => {
-    e.preventDefault(); lost = true;
-    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
-  });
+  const ro = new ResizeObserver(() => { if (reduceMotion.matches) still(); });
+  for (const f of fields) ro.observe(f.canvas);
   sync();
 
   const shuffleBtn = document.getElementById("shuffle-colors");
   if (shuffleBtn) {
     shuffleBtn.addEventListener("click", () => {
       applyPalette();
-      if (reduceMotion.matches && !lost) still();
+      if (reduceMotion.matches) still();
     });
   }
 })();
